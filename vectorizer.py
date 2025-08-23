@@ -1,15 +1,13 @@
 import re
-from functools import lru_cache
+import heapq
 from collections import Counter
 import math
 
-@lru_cache(maxsize=256)
 def preprocess(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)
     return text.split()
 
-@lru_cache(maxsize=128)
 def chunk_text(text, chunk_size=200):
     tokens = preprocess(text)
     return [" ".join(tokens[i:i+chunk_size]) for i in range(0, len(tokens), chunk_size)]
@@ -67,7 +65,8 @@ def get_top_k_rules(doc_text, rule_texts, rule_filenames, k=5):
 
     all_chunks = []
     for i, rule_text in enumerate(rule_texts):
-        chunks = chunk_text(rule_text)
+        # Use larger chunks for rule texts to reduce number of chunks processed
+        chunks = chunk_text(rule_text, chunk_size=400)
         for chunk in chunks:
             all_chunks.append((chunk, rule_filenames[i]))
 
@@ -77,16 +76,19 @@ def get_top_k_rules(doc_text, rule_texts, rule_filenames, k=5):
     idf = get_idf(processed_chunks + [processed_doc])
     doc_vec = get_tfidf_vector(processed_doc, idf)
 
-    similarities = []
+    # Compute similarities and select top-k using a heap for efficiency
+    similarity_with_index = []
     for i, chunk_tokens in enumerate(processed_chunks):
         chunk_vec = get_tfidf_vector(chunk_tokens, idf)
-        similarity = get_cosine_similarity(doc_vec, chunk_vec)
-        similarities.append((similarity, all_chunks[i][0], all_chunks[i][1]))
+        sim = get_cosine_similarity(doc_vec, chunk_vec)
+        similarity_with_index.append((sim, i))
 
-    similarities.sort(key=lambda x: x[0], reverse=True)
-
-    top_k_rules = [rule[1] for rule in similarities[:k]]
-    top_k_filenames = [rule[2] for rule in similarities[:k]]
+    top = heapq.nlargest(k, similarity_with_index, key=lambda x: x[0])
+    # Stabilize ordering among ties for consistency
+    top.sort(key=lambda x: (-x[0], x[1]))
+    top_indices = [idx for _, idx in top]
+    top_k_rules = [all_chunks[i][0] for i in top_indices]
+    top_k_filenames = [all_chunks[i][1] for i in top_indices]
 
     print(f"Top {k} relevant rule chunks identified from: {top_k_filenames}")
 

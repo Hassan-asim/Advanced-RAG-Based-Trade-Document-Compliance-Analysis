@@ -148,9 +148,8 @@ class RAGLLMPipeline:
         return None
 
     @staticmethod
-    @functools.lru_cache(maxsize=128)
     def _get_top_k_rules_cached(doc_text: str, rules_text: str, rules_filename: str, k: int) -> tuple:
-        # Return as tuple to make it hashable for lru_cache; caller can convert back to list
+        # Direct call without caching to ensure fresh analysis results
         rules = get_top_k_rules(
             doc_text=doc_text,
             rule_texts=[rules_text],
@@ -161,7 +160,8 @@ class RAGLLMPipeline:
 
     def get_completion_with_fallback(self, messages: List[Dict[str, str]], temperature: float = 0.7, max_tokens: int = 1024, glm_timeout_seconds: float | None = None) -> str | None:
         print("DEBUG: Attempting completion with GLM (main LLM)...")
-        glm_response_content = self.glm_llm.get_completion(messages, temperature=temperature, max_tokens=max_tokens, timeout_seconds=glm_timeout_seconds)
+        # Reduce GLM timeout to failover faster during analysis
+        glm_response_content = self.glm_llm.get_completion(messages, temperature=temperature, max_tokens=max_tokens, timeout_seconds=glm_timeout_seconds or 6)
         if glm_response_content and glm_response_content.strip():
             print("DEBUG: GLM returned content.")
             return glm_response_content
@@ -288,6 +288,10 @@ class RAGLLMPipeline:
                 merged_discrepancies = dedupe(merged_discrepancies)
                 merged_compliances = dedupe(merged_compliances)
 
+                # Deterministic ordering for consistency
+                merged_discrepancies.sort(key=lambda x: (x.get('rule', ''), x.get('finding', '')))
+                merged_compliances.sort(key=lambda x: (x.get('rule', ''), x.get('finding', '')))
+
                 structured_response = {
                     "compliance_report": [{
                         "document_name": document.get('filename', 'unknown'),
@@ -304,7 +308,7 @@ class RAGLLMPipeline:
             try:
                 print(f"DEBUG: Attempt {attempt + 1} with max_tokens={max_tokens}")
                 # Use higher max_tokens for compliance analysis (needs more detailed output)
-                llm_response_content = self.get_completion_with_fallback(messages, max_tokens=max_tokens, glm_timeout_seconds=12)
+                llm_response_content = self.get_completion_with_fallback(messages, temperature=0.0, max_tokens=max_tokens, glm_timeout_seconds=12)
                 if llm_response_content:
                     # Clean the response in case it has markdown formatting
                     clean_response = llm_response_content.strip()

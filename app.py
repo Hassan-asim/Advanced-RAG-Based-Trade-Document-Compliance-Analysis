@@ -389,10 +389,6 @@ if all_rule_texts:
         try:
             file_content = uploaded_file.getvalue().decode("utf-8")
             file_name = uploaded_file.name
-            # Compute a stable hash for caching in session
-            doc_hash = hashlib.sha256(file_content.encode("utf-8")).hexdigest()
-            if 'doc_cache' not in st.session_state:
-                st.session_state.doc_cache = {}
             
             st.markdown("---")
             
@@ -409,12 +405,7 @@ if all_rule_texts:
                 def cached_detect_document_type(content: str) -> str:
                     return pipeline.detect_document_type(content)
 
-                # Prefer session cache first to avoid re-LLM calls within session
-                if doc_hash in st.session_state.doc_cache and 'doc_type' in st.session_state.doc_cache[doc_hash]:
-                    doc_type_result = st.session_state.doc_cache[doc_hash]['doc_type']
-                else:
-                    doc_type_result = cached_detect_document_type(file_content)
-                    st.session_state.doc_cache.setdefault(doc_hash, {})['doc_type'] = doc_type_result
+                doc_type_result = cached_detect_document_type(file_content)
             
             if doc_type_result and doc_type_result != "UNKNOWN":
                 detected_doc_type = doc_type_result
@@ -505,48 +496,32 @@ if all_rule_texts:
                     progress_bar = st.progress(0)
                     status_text = st.empty()
 
-                    # Cached compliance processing
-                    @st.cache_data(show_spinner=False)
-                    def cached_process_document_for_compliance(content: str, fname: str, rtext: str, rfname: str):
-                        return pipeline.process_document_for_compliance(
-                            {"content": content, "filename": fname},
-                            rtext,
-                            rfname
-                        )
+                    # Run analyses in parallel without caching results
+                    total = len(validation_sets)
+                    completed = 0
+                    progress_bar.progress(0 if total else 1)
 
                     all_results_map = {}
-
-                    # Attempt session cache; compute keys per rule
-                    pending_jobs = []
-                    for idx, (rules_filename, rules_text) in enumerate(validation_sets):
-                        cache_key = (doc_hash, rules_filename)
-                        if doc_hash in st.session_state.doc_cache and rules_filename in st.session_state.doc_cache[doc_hash]:
-                            all_results_map[idx] = (rules_filename, st.session_state.doc_cache[doc_hash][rules_filename])
-                        else:
-                            pending_jobs.append((idx, rules_filename, rules_text))
-
-                    # Run remaining jobs in parallel
-                    total = len(validation_sets)
-                    completed = total - len(pending_jobs)
-                    progress_bar.progress(completed / total if total else 1)
-
-                    if pending_jobs:
-                        with ThreadPoolExecutor(max_workers=min(4, len(pending_jobs))) as executor:
+                    if total:
+                        with ThreadPoolExecutor(max_workers=min(4, total)) as executor:
                             future_to_idx = {}
-                            for idx, rfname, rtext in pending_jobs:
+                            for idx, (rfname, rtext) in enumerate(validation_sets):
                                 status_text.text(f"🔍 Analyzing against {rfname}...")
-                                fut = executor.submit(cached_process_document_for_compliance, file_content, file_name, rtext, rfname)
+                                fut = executor.submit(
+                                    pipeline.process_document_for_compliance,
+                                    {"content": file_content, "filename": file_name},
+                                    rtext,
+                                    rfname
+                                )
                                 future_to_idx[fut] = (idx, rfname)
                             for fut in as_completed(future_to_idx):
                                 idx, rfname = future_to_idx[fut]
                                 try:
                                     result = fut.result()
-                                except Exception as _e:
+                                except Exception:
                                     result = None
                                 if result:
                                     all_results_map[idx] = (rfname, result)
-                                    # Update session cache
-                                    st.session_state.doc_cache.setdefault(doc_hash, {})[rfname] = result
                                 completed += 1
                                 progress_bar.progress(completed / total if total else 1)
 
