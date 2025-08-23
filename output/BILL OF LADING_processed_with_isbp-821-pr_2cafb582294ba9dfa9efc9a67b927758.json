@@ -1,0 +1,4 @@
+{
+  "error": "Both GLM and Groq LLMs failed to provide a response.",
+  "details": "No LLM response content."
+}

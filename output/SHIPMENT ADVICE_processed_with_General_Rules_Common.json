@@ -1,0 +1,5 @@
+{
+  "error": "LLM response was not valid JSON.",
+  "details": "Extra data: line 10 column 1 (char 142)",
+  "raw_response": "```json\n{\n  \"compliance_report\": [\n    {\n      \"document_name\": \"SHIPMENT ADVICE.txt\",\n      \"discrepancies\": [],\n      \"compliances\": []\n    }\n  ]\n}\n```\n\n**Explanation:**  \nThe provided RULES_TEXT contains only OCR metadata listing rule/article numbers (e.g., \"para1generalprinciples\", \"article14standardexamination\") but **no actual rule text**. Since the directive requires analysis *exclusively* against the provided ISBP 745/ISBP 821/UCP 600 text, and no substantive rule content is included, no compliance checks can be performed. The report reflects this limitation with empty `discrepancies` and `compliances` arrays."
+}

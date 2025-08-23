@@ -1,0 +1,25 @@
+{
+  "general_rules": [
+    "General_Rules_Common.pdf"
+  ],
+  "document_specific_rules": {
+    "BILL OF LADING": [
+      "Bill_of_Lading_Rules.pdf"
+    ],
+    "COMMERCIAL INVOICE": [
+      "Commercial_Invoice_Validation_Rules.pdf"
+    ],
+    "COVERING SCHEDULE": [
+      "Covering_Schedule_Validation_Rules.pdf"
+    ],
+    "DHL RECEIPT": [
+      "DHL_Receipt_Validation_Rules.pdf"
+    ],
+    "PACKING LIST": [
+      "Packing_List_Validation_Rules.pdf"
+    ],
+    "SHIPMENT ADVICE": [
+      "Shipment_Advice_Validation_Rules.pdf"
+    ]
+  }
+}

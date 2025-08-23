@@ -1,0 +1,27 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "BILL OF LADING.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Port of Loading not stated in the credit",
+          "rule": "f a charter party bill of lading is to indicate the port of loading stated in the credit"
+        },
+        {
+          "finding": "No dated on board notation for each port of loading",
+          "rule": "h when a bill of lading indicates more than one port of loading it is to evidence an on board notation with the relevant on board date for each port of loading"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Place of Receipt and Port of Loading are different",
+          "rule": "c when a charter party bill of lading indicates a place of receipt different from the port of loading"
+        },
+        {
+          "finding": "On board notation is present",
+          "rule": "a charter party bill of lading is to bear a dated on board notation"
+        }
+      ]
+    }
+  ]
+}

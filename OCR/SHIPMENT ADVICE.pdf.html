@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>OCR Results Viewer</title>
+            <style>
+                
+                :root {
+                    --bg-primary: #0f172a;
+                    --bg-secondary: #1e293b;
+                    --bg-tertiary: #334155;
+                    --text-primary: #f1f5f9;
+                    --text-secondary: #cbd5e1;
+                    --accent: #3b82f6;
+                    --accent-hover: #2563eb;
+                    --success: #10b981;
+                    --warning: #f59e0b;
+                    --danger: #ef4444;
+                    --border: #334155;
+                }
+                
+                [data-theme="light"] {
+                    --bg-primary: #f8fafc;
+                    --bg-secondary: #ffffff;
+                    --bg-tertiary: #f1f5f9;
+                    --text-primary: #1e293b;
+                    --text-secondary: #64748b;
+                    --border: #e2e8f0;
+                }
+            
+
+                * {
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    margin: 0;
+                    background: var(--bg-primary);
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    color: var(--text-primary);
+                    line-height: 1.6;
+                    transition: background 0.3s, color 0.3s;
+                    overflow-x: hidden;
+                }
+                
+                .main-container {
+                    display: flex;
+                    height: 100vh;
+                }
+                
+                .thumbnail-sidebar {
+                    width: 160px;
+                    background: var(--bg-secondary);
+                    overflow-y: auto;
+                    border-right: 1px solid var(--border);
+                    padding: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                
+                .thumbnail {
+                    cursor: pointer;
+                    border: 2px solid transparent;
+                    border-radius: 6px;
+                    overflow: hidden;
+                    transition: all 0.2s;
+                    background: var(--bg-tertiary);
+                }
+                
+                .thumbnail:hover {
+                    border-color: var(--accent);
+                    transform: translateY(-2px);
+                }
+                
+                .thumbnail.active {
+                    border-color: var(--accent);
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+                }
+                
+                .thumbnail img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                }
+                
+                .thumbnail-label {
+                    padding: 6px;
+                    text-align: center;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: var(--text-secondary);
+                }
+                
+                .content-container {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+            
+
+                .progress-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background: var(--bg-primary);
+                    z-index: 3000;
+                    display: none;
+                }
+                
+                .progress-bar {
+                    height: 100%;
+                    background: var(--accent);
+                    width: 0%;
+                    transition: width 0.3s;
+                }
+                
+                .progress-text {
+                    position: absolute;
+                    top: 5px;
+                    right: 10px;
+                    font-size: 12px;
+                    color: var(--text-primary);
+                    background: var(--bg-secondary);
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                }
+            
+
+                .toolbar {
+                    background: var(--bg-secondary);
+                    border-bottom: 1px solid var(--border);
+                    position: sticky;
+                    top: 0;
+                    z-index: 1000;
+                    transition: background 0.3s, border-color 0.3s;
+                }
+                
+                .toolbar-row {
+                    padding: 12px 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .toolbar-row:first-child {
+                    border-bottom: 1px solid var(--border);
+                }
+                
+                .toolbar-left, .toolbar-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px 24px;
+                }
+                
+                .toolbar-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    border: 1px solid transparent;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar-group:hover {
+                    border-color: var(--accent);
+                }
+            
+
+                .toolbar label {
+                    font-weight: 500;
+                    color: var(--text-secondary);
+                    font-size: 13px;
+                    white-space: nowrap;
+                }
+                
+                .toolbar input[type="range"] {
+                    width: 120px;
+                    height: 5px;
+                    background: var(--bg-primary);
+                    border-radius: 3px;
+                    outline: none;
+                    -webkit-appearance: none;
+                }
+                
+                .toolbar input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    background: var(--accent);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar input[type="range"]::-webkit-slider-thumb:hover {
+                    background: var(--accent-hover);
+                    transform: scale(1.1);
+                }
+                
+                .toolbar input[type="text"] {
+                    padding: 8px 12px;
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border);
+                    border-radius: 6px;
+                    color: var(--text-primary);
+                    font-size: 13px;
+                    width: 180px;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar input[type="text"]:focus {
+                    outline: none;
+                    border-color: var(--accent);
+                }
+                
+                .toolbar button {
+                    padding: 8px 14px;
+                    background: var(--accent);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                
+                .toolbar button:hover {
+                    background: var(--accent-hover);
+                }
+                
+                .toolbar button:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            
+
+                .pages-wrapper {
+                    padding: 40px 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 40px;
+                    overflow-x: hidden;
+                    overflow-y: auto;
+                    align-items: center;
+                    min-height: calc(100vh - 140px);
+                    flex: 1;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar {
+                    width: 12px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-track {
+                    background: var(--bg-tertiary);
+                    border-radius: 6px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-thumb {
+                    background: var(--accent);
+                    border-radius: 6px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent-hover);
+                }
+                
+                .page-container {
+                    position: relative;
+                    background: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    transition: transform 0.2s;
+                    flex-shrink: 0;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                    max-width: 100%;
+                    width: fit-content;
+                    min-height: 200px;
+                }
+                
+                .lazy-page {
+                    min-height: 300px;
+                }
+                
+                .page-placeholder {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 300px;
+                    background: var(--bg-tertiary);
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                }
+                
+                .ocr-image {
+                    display: block;
+                    width: auto;
+                    max-width: none;
+                    height: auto;
+                }
+            
+
+                .ocr-line {
+                    position: absolute;
+                    pointer-events: auto;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .ocr-line:hover {
+                    z-index: 10;
+                }
+                
+                .ocr-line.selected {
+                    outline: 2px solid var(--accent);
+                    outline-offset: 2px;
+                }
+                
+                .underline {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 3px;
+                    opacity: 0.9;
+                    transition: all 0.2s;
+                }
+                
+                .ocr-line[data-edited="true"] .underline {
+                    background-color: var(--warning) !important;
+                    height: 4px;
+                }
+                
+                .ocr-tooltip {
+                    visibility: hidden;
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(30, 41, 59, 0.95);
+                    color: var(--text-primary);
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    white-space: nowrap;
+                    opacity: 0;
+                    transition: opacity 0.2s, transform 0.2s;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid var(--border);
+                    margin-bottom: 8px;
+                }
+                
+                .ocr-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-width: 6px;
+                    border-style: solid;
+                    border-color: rgba(30, 41, 59, 0.95) transparent transparent transparent;
+                }
+                
+                .ocr-line:hover .ocr-tooltip {
+                    visibility: visible;
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(-4px);
+                }
+            
+
+                .modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 2000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(15, 23, 42, 0.8);
+                    backdrop-filter: blur(4px);
+                    animation: fadeIn 0.2s;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                .modal-content {
+                    background-color: var(--bg-secondary);
+                    margin: 10% auto;
+                    padding: 24px;
+                    border: 1px solid var(--border);
+                    width: 50%;
+                    max-width: 600px;
+                    border-radius: 12px;
+                    animation: slideIn 0.3s;
+                    transition: background 0.3s, border-color 0.3s;
+                }
+                
+                @keyframes slideIn {
+                    from { transform: translateY(-20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                
+                .modal h3 {
+                    margin-top: 0;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                
+                .modal-buttons {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+                
+                .modal textarea {
+                    width: 100%;
+                    min-height: 120px;
+                    background: var(--bg-tertiary);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border);
+                    padding: 12px;
+                    border-radius: 6px;
+                    font-family: inherit;
+                    font-size: 14px;
+                    resize: vertical;
+                    transition: all 0.2s;
+                }
+                
+                .modal textarea:focus {
+                    outline: none;
+                    border-color: var(--accent);
+                }
+                
+                .modal button {
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .modal button:first-of-type {
+                    background: var(--bg-tertiary);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border);
+                }
+                
+                .modal button:first-of-type:hover {
+                    background: var(--border);
+                }
+                
+                .modal button:last-of-type {
+                    background: var(--accent);
+                    color: white;
+                    border: none;
+                }
+                
+                .modal button:last-of-type:hover {
+                    background: var(--accent-hover);
+                }
+            
+
+                .drawing-box {
+                    position: absolute;
+                    border: 2px dashed var(--accent);
+                    background: rgba(59, 130, 246, 0.1);
+                    pointer-events: none;
+                    display: none;
+                    border-radius: 4px;
+                }
+                
+                .edited-badge {
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    background: var(--warning);
+                    color: var(--bg-primary);
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 6px;
+                    border-radius: 4px;
+                    display: none;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                .ocr-line[data-edited="true"] .edited-badge {
+                    display: block;
+                }
+                
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 16px;
+                    margin-top: 16px;
+                }
+                
+                .stat-card {
+                    background: var(--bg-tertiary);
+                    padding: 16px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                }
+                
+                .stat-label {
+                    font-size: 14px;
+                    color: var(--text-secondary);
+                    margin-bottom: 4px;
+                }
+                
+                .stat-value {
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                
+                .export-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 16px;
+                }
+                
+                .export-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .export-option:hover {
+                    border-color: var(--accent);
+                }
+                
+                .export-option input[type="radio"] {
+                    margin: 0;
+                }
+                
+                .export-option label {
+                    flex: 1;
+                    cursor: pointer;
+                    margin: 0;
+                    font-weight: 500;
+                }
+                
+                /* Collapsible toolbar styles */
+                #toolbarSecondRow {
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                }
+                
+                #toolbarSecondRow.collapsed {
+                    max-height: 0;
+                    padding: 0;
+                    border: none;
+                }
+                
+                .collapse-btn {
+                    background: transparent !important;
+                    padding: 6px !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: 4px !important;
+                }
+                
+                .collapse-btn:hover {
+                    background: var(--bg-tertiary) !important;
+                }
+                
+                .toolbar-icon {
+                    width: 16px;
+                    height: 16px;
+                }
+                
+                .threshold-value {
+                    background: var(--bg-primary);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    color: var(--accent);
+                    min-width: 40px;
+                    text-align: center;
+                    font-size: 13px;
+                }
+            
+            </style>
+        </head>
+        <body>
+            <div id="progressBar" class="progress-container">
+                <div id="progressFill" class="progress-bar"></div>
+                <div id="progressText" class="progress-text">0%</div>
+            </div>
+            
+            <div class="main-container">
+                <div class="content-container">
+                    <div class="toolbar">
+                        <!-- First Row: Main Controls -->
+                        <div class="toolbar-row">
+                            <div class="toolbar-left">
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    <label>OCR Viewer</label>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    </svg>
+                                    <label>Confidence:</label>
+                                    <input type="range" min="0" max="1" step="0.01" value="0.9" id="thresholdSlider">
+                                    <span class="threshold-value" id="thresholdVal">0.9</span>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <input type="text" id="textFilter" placeholder="Search text...">
+                                </div>
+                            </div>
+                            
+                            <div class="toolbar-right">
+                                <div class="toolbar-group">
+                                    <button id="addTextBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add Text
+                                    </button>
+                                    <button id="saveBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                            <polyline points="7 3 7 8 15 8"></polyline>
+                                        </svg>
+                                        Save
+                                    </button>
+                                    <button id="collapseBtn" class="collapse-btn" title="Toggle Toolbar">
+                                        <svg class="toolbar-icon" id="collapseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Second Row: Additional Controls -->
+                        <div class="toolbar-row" id="toolbarSecondRow">
+                            <div class="toolbar-left">
+                                <div class="toolbar-group">
+                                    <button id="undoBtn" disabled>
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 7v6h6"></path>
+                                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                                        </svg>
+                                    </button>
+                                    <button id="redoBtn" disabled>
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 7v6h-6"></path>
+                                            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="zoomOutBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                                        </svg>
+                                    </button>
+                                    <span id="zoomLevel">100%</span>
+                                    <button id="zoomInBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                                        </svg>
+                                    </button>
+                                    <button id="zoomResetBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="1 4 1 10 7 10"></polyline>
+                                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="toolbar-right">
+                                <div class="toolbar-group">
+                                    <button id="themeToggle">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="5"></circle>
+                                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="statsBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                                        </svg>
+                                        Stats
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="exportBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                        Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pages-wrapper" id="pagesWrapper">
+                        
+            <div class="page-container" id="page-0">
+                <img class="ocr-image" src="res\5\0.png" alt="Page 0" />
+                
+        <div class="ocr-line" data-score="0.9854593276977539" data-text="copy"
+             data-original-text="COPY" data-index="0" data-page="0"
+             data-edited="false" style="left:863px;top:84px;width:180px;height:68px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">COPY (Confidence: 98.55%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9994491338729858" data-text="starlinger"
+             data-original-text="Starlinger" data-index="1" data-page="0"
+             data-edited="false" style="left:534px;top:151px;width:166px;height:45px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Starlinger (Confidence: 99.94%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9986095428466797" data-text="email"
+             data-original-text="EMAIL" data-index="2" data-page="0"
+             data-edited="false" style="left:194px;top:233px;width:65px;height:21px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">EMAIL (Confidence: 99.86%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9995762705802917" data-text="iba"
+             data-original-text="IBA" data-index="3" data-page="0"
+             data-edited="false" style="left:392px;top:233px;width:41px;height:23px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">IBA (Confidence: 99.96%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9960083961486816" data-text="17.07.2025"
+             data-original-text="17.07.2025" data-index="4" data-page="0"
+             data-edited="false" style="left:526px;top:233px;width:113px;height:23px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">17.07.2025 (Confidence: 99.60%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9989846348762512" data-text="1/2"
+             data-original-text="1/2" data-index="5" data-page="0"
+             data-edited="false" style="left:999px;top:233px;width:41px;height:27px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">1/2 (Confidence: 99.90%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9962482452392578" data-text="to:"
+             data-original-text="To:" data-index="6" data-page="0"
+             data-edited="false" style="left:191px;top:306px;width:40px;height:24px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">To: (Confidence: 99.62%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9771121144294739" data-text="m/s. premier insurance limited,"
+             data-original-text="M/S. PREMIER INSURANCE LIMITED," data-index="7" data-page="0"
+             data-edited="false" style="left:393px;top:308px;width:350px;height:23px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">M/S. PREMIER INSURANCE LIMITED, (Confidence: 97.71%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9952297210693359" data-text="karachi pakistan"
+             data-original-text="KARACHI PAKISTAN" data-index="8" data-page="0"
+             data-edited="false" style="left:394px;top:332px;width:191px;height:20px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">KARACHI PAKISTAN (Confidence: 99.52%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9761187434196472" data-text="by email:info@pil.com.pk"
+             data-original-text="BY EMAIL:info@pil.com.pk" data-index="9" data-page="0"
+             data-edited="false" style="left:394px;top:355px;width:258px;height:23px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">BY EMAIL:info@pil.com.pk (Confidence: 97.61%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9984259009361267" data-text="to applicant:"
+             data-original-text="to applicant:" data-index="10" data-page="0"
+             data-edited="false" style="left:193px;top:405px;width:123px;height:24px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">to applicant: (Confidence: 99.84%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9607135653495789" data-text="bulk flexible pakistan pvt ltd"
+             data-original-text="BULK FLEXIBLE PAKISTAN PVT LTD" data-index="11" data-page="0"
+             data-edited="false" style="left:394px;top:407px;width:334px;height:20px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">BULK FLEXIBLE PAKISTAN PVT LTD (Confidence: 96.07%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9774788618087769" data-text="501 5th floor business avenue"
+             data-original-text="501 5TH FLOOR BUSINESS AVENUE" data-index="12" data-page="0"
+             data-edited="false" style="left:393px;top:430px;width:341px;height:22px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">501 5TH FLOOR BUSINESS AVENUE (Confidence: 97.75%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9958401918411255" data-text="shahrah e faisal"
+             data-original-text="SHAHRAH E FAISAL" data-index="13" data-page="0"
+             data-edited="false" style="left:393px;top:455px;width:189px;height:21px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">SHAHRAH E FAISAL (Confidence: 99.58%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9650259613990784" data-text="karachi- pakistan"
+             data-original-text="KARACHI- PAKISTAN" data-index="14" data-page="0"
+             data-edited="false" style="left:393px;top:480px;width:210px;height:20px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">KARACHI- PAKISTAN (Confidence: 96.50%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9702494740486145" data-text="by email: info(at)bulkflexibles.com"
+             data-original-text="BY EMAIL: INFO(AT)BULKFLEXIBLES.COM" data-index="15" data-page="0"
+             data-edited="false" style="left:393px;top:504px;width:396px;height:23px;">
+            <div class="underline" style="background-color:rgb(7,247,100);"></div>
+            <div class="ocr-tooltip">BY EMAIL: INFO(AT)BULKFLEXIBLES.COM (Confidence: 97.02%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.995590329170227" data-text="by the beneficiary:"
+             data-original-text="by the beneficiary:" data-index="16" data-page="0"
+             data-edited="false" style="left:194px;top:552px;width:180px;height:24px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">by the beneficiary: (Confidence: 99.56%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9749988913536072" data-text="starlinger and co."
+             data-original-text="STARLINGER AND CO." data-index="17" data-page="0"
+             data-edited="false" style="left:392px;top:553px;width:213px;height:21px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">STARLINGER AND CO. (Confidence: 97.50%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9933406710624695" data-text="gesellschaft m.b.h."
+             data-original-text="GESELLSCHAFT M.B.H." data-index="18" data-page="0"
+             data-edited="false" style="left:393px;top:578px;width:217px;height:21px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">GESELLSCHAFT M.B.H. (Confidence: 99.33%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9805989861488342" data-text="sonnenuhrgasse 4.,"
+             data-original-text="SONNENUHRGASSE 4.," data-index="19" data-page="0"
+             data-edited="false" style="left:390px;top:601px;width:224px;height:25px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">SONNENUHRGASSE 4., (Confidence: 98.06%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9828648567199707" data-text="1060 vienna,austria."
+             data-original-text="1060 VIENNA,AUSTRIA." data-index="20" data-page="0"
+             data-edited="false" style="left:394px;top:628px;width:231px;height:20px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">1060 VIENNA,AUSTRIA. (Confidence: 98.29%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9632276892662048" data-text="by email: projekt.iba@starlinger.com"
+             data-original-text="BY EMAIL: projekt.iba@starlinger.com" data-index="21" data-page="0"
+             data-edited="false" style="left:391px;top:650px;width:363px;height:25px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">BY EMAIL: projekt.iba@starlinger.com (Confidence: 96.32%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9353147149085999" data-text="shipmentadvice"
+             data-original-text="SHIPMENTADVICE" data-index="22" data-page="0"
+             data-edited="false" style="left:192px;top:724px;width:294px;height:23px;">
+            <div class="underline" style="background-color:rgb(16,238,100);"></div>
+            <div class="ocr-tooltip">SHIPMENTADVICE (Confidence: 93.53%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9629899859428406" data-text="ref.: irrevocable confirmed documentary credit (l/c no.) number 0578ilc074195"
+             data-original-text="Ref.: Irrevocable confirmed Documentary Credit (L/C No.) Number 0578ILC074195" data-index="23" data-page="0"
+             data-edited="false" style="left:191px;top:797px;width:805px;height:26px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">Ref.: Irrevocable confirmed Documentary Credit (L/C No.) Number 0578ILC074195 (Confidence: 96.30%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9832121729850769" data-text="insurance covered by applicant."
+             data-original-text="Insurance covered by applicant." data-index="24" data-page="0"
+             data-edited="false" style="left:259px;top:824px;width:305px;height:22px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">Insurance covered by applicant. (Confidence: 98.32%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9608870148658752" data-text="marine cover note no. 2025/04/clfmipdt00027 dated: 15.04.2025"
+             data-original-text="Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025" data-index="25" data-page="0"
+             data-edited="false" style="left:258px;top:846px;width:648px;height:25px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025 (Confidence: 96.09%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9261184930801392" data-text="h.s.code no. 8446 2900 ntn no. 2679948-7"
+             data-original-text="H.S.Code No. 8446 2900 NTN No. 2679948-7" data-index="26" data-page="0"
+             data-edited="false" style="left:259px;top:872px;width:438px;height:23px;">
+            <div class="underline" style="background-color:rgb(18,236,100);"></div>
+            <div class="ocr-tooltip">H.S.Code No. 8446 2900 NTN No. 2679948-7 (Confidence: 92.61%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9816910028457642" data-text="job no. ma2053480"
+             data-original-text="Job No. MA2053480" data-index="27" data-page="0"
+             data-edited="false" style="left:259px;top:897px;width:191px;height:21px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">Job No. MA2053480 (Confidence: 98.17%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9770492911338806" data-text="we, as the beneficiary, are herewith advising all shipment (s) under this credit as follows,"
+             data-original-text="We, as the beneficiary, are herewith advising all shipment (s) under this credit as follows," data-index="28" data-page="0"
+             data-edited="false" style="left:192px;top:945px;width:848px;height:25px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">We, as the beneficiary, are herewith advising all shipment (s) under this credit as follows, (Confidence: 97.70%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9548625946044922" data-text="referring to marine cover note no. 2025/04/clfmipdt00027 dated: 15.04.2025:"
+             data-original-text="referring to Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025:" data-index="29" data-page="0"
+             data-edited="false" style="left:192px;top:969px;width:769px;height:25px;">
+            <div class="underline" style="background-color:rgb(11,243,100);"></div>
+            <div class="ocr-tooltip">referring to Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025: (Confidence: 95.49%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9713574647903442" data-text="invoice value:"
+             data-original-text="INVOICE VALUE:" data-index="30" data-page="0"
+             data-edited="false" style="left:193px;top:1019px;width:160px;height:21px;">
+            <div class="underline" style="background-color:rgb(7,247,100);"></div>
+            <div class="ocr-tooltip">INVOICE VALUE: (Confidence: 97.14%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9520149230957031" data-text="circular loom rx 6.o pro (with standard accessories)"
+             data-original-text="CIRCULAR LOOM RX 6.O PRO (WITH STANDARD ACCESSORIES)" data-index="31" data-page="0"
+             data-edited="false" style="left:191px;top:1042px;width:667px;height:26px;">
+            <div class="underline" style="background-color:rgb(12,242,100);"></div>
+            <div class="ocr-tooltip">CIRCULAR LOOM RX 6.O PRO (WITH STANDARD ACCESSORIES) (Confidence: 95.20%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9402078986167908" data-text="qty: 4 units at rate of usd. 20,385 per unit"
+             data-original-text="QTY: 4 UNITS AT RATE OF USD. 20,385 PER UNIT" data-index="32" data-page="0"
+             data-edited="false" style="left:192px;top:1068px;width:518px;height:23px;">
+            <div class="underline" style="background-color:rgb(15,239,100);"></div>
+            <div class="ocr-tooltip">QTY: 4 UNITS AT RATE OF USD. 20,385 PER UNIT (Confidence: 94.02%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9344716668128967" data-text="plus freight charges of usd. 2,460/-"
+             data-original-text="PLUS FREIGHT CHARGES OF USD. 2,460/-" data-index="33" data-page="0"
+             data-edited="false" style="left:191px;top:1092px;width:443px;height:26px;">
+            <div class="underline" style="background-color:rgb(16,238,100);"></div>
+            <div class="ocr-tooltip">PLUS FREIGHT CHARGES OF USD. 2,460/- (Confidence: 93.45%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8877860307693481" data-text="total invoice value cfr karachi seaport, pakistan"
+             data-original-text="TOTAL INVOICE VALUE CFR KARACHI SEAPORT, PAKISTAN" data-index="34" data-page="0"
+             data-edited="false" style="left:190px;top:1140px;width:622px;height:26px;">
+            <div class="underline" style="background-color:rgb(28,226,100);"></div>
+            <div class="ocr-tooltip">TOTAL INVOICE VALUE CFR KARACHI SEAPORT, PAKISTAN (Confidence: 88.78%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9680185317993164" data-text="usd 84.000,00"
+             data-original-text="USD 84.000,00" data-index="35" data-page="0"
+             data-edited="false" style="left:852px;top:1143px;width:161px;height:24px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">USD 84.000,00 (Confidence: 96.80%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9587856531143188" data-text="(acc. to icc incoterms 2020)"
+             data-original-text="(acc. to ICC Incoterms 2020)" data-index="36" data-page="0"
+             data-edited="false" style="left:192px;top:1167px;width:279px;height:23px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">(acc. to ICC Incoterms 2020) (Confidence: 95.88%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.27997851371765137" data-text="三"
+             data-original-text="三" data-index="37" data-page="0"
+             data-edited="false" style="left:875px;top:1200px;width:82px;height:10px;">
+            <div class="underline" style="background-color:rgb(183,71,100);"></div>
+            <div class="ocr-tooltip">三 (Confidence: 28.00%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9750944972038269" data-text="cfr karachi seaport,pakistan"
+             data-original-text="CFR KARACHI SEAPORT,PAKISTAN" data-index="38" data-page="0"
+             data-edited="false" style="left:192px;top:1216px;width:373px;height:22px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">CFR KARACHI SEAPORT,PAKISTAN (Confidence: 97.51%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9553244113922119" data-text="all other details as per proforma invoice no. pkgreif-o16.1"
+             data-original-text="ALL OTHER DETAILS AS PER PROFORMA INVOICE NO. PKGREIF-O16.1" data-index="39" data-page="0"
+             data-edited="false" style="left:192px;top:1240px;width:733px;height:22px;">
+            <div class="underline" style="background-color:rgb(11,243,100);"></div>
+            <div class="ocr-tooltip">ALL OTHER DETAILS AS PER PROFORMA INVOICE NO. PKGREIF-O16.1 (Confidence: 95.53%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9891404509544373" data-text="dated:08-apr-2025"
+             data-original-text="DATED:08-APR-2025" data-index="40" data-page="0"
+             data-edited="false" style="left:191px;top:1264px;width:229px;height:22px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">DATED:08-APR-2025 (Confidence: 98.91%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9667925238609314" data-text="we are herewith certifying merchandise of china origin."
+             data-original-text="WE ARE HEREWITH CERTIFYING MERCHANDISE OF CHINA ORIGIN." data-index="41" data-page="0"
+             data-edited="false" style="left:295px;top:1315px;width:640px;height:22px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">WE ARE HEREWITH CERTIFYING MERCHANDISE OF CHINA ORIGIN. (Confidence: 96.68%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8768885135650635" data-text="starlnger & co.gesellschaft m.b.h.,sonnenuhrgasse 4,1060 vienna, austrla,t:+43 159955-0,f-25,www.starllnger.com"
+             data-original-text="Starlnger & Co.Gesellschaft m.b.H.,Sonnenuhrgasse 4,1060 Vienna, Austrla,T:+43 159955-0,F-25,www.starllnger.com" data-index="42" data-page="0"
+             data-edited="false" style="left:187px;top:1448px;width:814px;height:23px;">
+            <div class="underline" style="background-color:rgb(31,223,100);"></div>
+            <div class="ocr-tooltip">Starlnger & Co.Gesellschaft m.b.H.,Sonnenuhrgasse 4,1060 Vienna, Austrla,T:+43 159955-0,F-25,www.starllnger.com (Confidence: 87.69%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8798049688339233" data-text="raiffesen bank internatonal ag,konto nr 1-00 425 611,blz 31000.bic rzbaatww,iban at26 3100 0001 0042 5611"
+             data-original-text="Raiffesen Bank Internatonal AG,Konto Nr 1-00 425 611,BLZ 31000.BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611" data-index="43" data-page="0"
+             data-edited="false" style="left:188px;top:1467px;width:698px;height:20px;">
+            <div class="underline" style="background-color:rgb(30,224,100);"></div>
+            <div class="ocr-tooltip">Raiffesen Bank Internatonal AG,Konto Nr 1-00 425 611,BLZ 31000.BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611 (Confidence: 87.98%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8804436922073364" data-text="unicredit bank austna ag,konto nr 0068-16169/00, blz !2000,bic bkauatww,iban at43 1100 0006 8161 6900"
+             data-original-text="UnICredIt Bank Austna AG,Konto Nr 0068-16169/00, BLZ !2000,BIC BKAUATWW,IBAN AT43 1100 0006 8161 6900" data-index="44" data-page="0"
+             data-edited="false" style="left:188px;top:1486px;width:678px;height:19px;">
+            <div class="underline" style="background-color:rgb(30,224,100);"></div>
+            <div class="ocr-tooltip">UnICredIt Bank Austna AG,Konto Nr 0068-16169/00, BLZ !2000,BIC BKAUATWW,IBAN AT43 1100 0006 8161 6900 (Confidence: 88.04%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8825913071632385" data-text="sitz der gesellschaft wien, regstrert handelsgercht wien fn 17230 y,uid-nr atu 14653604 a member of starlinger groud"
+             data-original-text="Sitz der Gesellschaft Wien, Regstrert Handelsgercht Wien FN 17230 Y,UID-Nr ATU 14653604 A member of Starlinger GrouD" data-index="45" data-page="0"
+             data-edited="false" style="left:187px;top:1504px;width:737px;height:20px;">
+            <div class="underline" style="background-color:rgb(29,225,100);"></div>
+            <div class="ocr-tooltip">Sitz der Gesellschaft Wien, Regstrert Handelsgercht Wien FN 17230 Y,UID-Nr ATU 14653604 A member of Starlinger GrouD (Confidence: 88.26%)</div>
+        </div>
+        
+            </div>
+            
+
+            <div class="page-container" id="page-1">
+                <img class="ocr-image" src="res\5\1.png" alt="Page 1" />
+                
+        <div class="ocr-line" data-score="0.9994925260543823" data-text="starlinger"
+             data-original-text="Starlinger" data-index="0" data-page="1"
+             data-edited="false" style="left:535px;top:152px;width:166px;height:45px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Starlinger (Confidence: 99.95%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9968734979629517" data-text="email"
+             data-original-text="EMAIL" data-index="1" data-page="1"
+             data-edited="false" style="left:194px;top:234px;width:65px;height:21px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">EMAIL (Confidence: 99.69%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9989010691642761" data-text="iba"
+             data-original-text="IBA" data-index="2" data-page="1"
+             data-edited="false" style="left:394px;top:235px;width:41px;height:22px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">IBA (Confidence: 99.89%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9983476400375366" data-text="17.07.2025"
+             data-original-text="17.07.2025" data-index="3" data-page="1"
+             data-edited="false" style="left:527px;top:234px;width:113px;height:24px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">17.07.2025 (Confidence: 99.83%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9984100461006165" data-text="2/2"
+             data-original-text="2/2" data-index="4" data-page="1"
+             data-edited="false" style="left:1000px;top:235px;width:42px;height:28px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">2/2 (Confidence: 99.84%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9876752495765686" data-text="port of loading:"
+             data-original-text="Port of Loading:" data-index="5" data-page="1"
+             data-edited="false" style="left:192px;top:331px;width:157px;height:26px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">Port of Loading: (Confidence: 98.77%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9810211062431335" data-text="shanghai seaport, china"
+             data-original-text="Shanghai Seaport, China" data-index="6" data-page="1"
+             data-edited="false" style="left:406px;top:332px;width:238px;height:25px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">Shanghai Seaport, China (Confidence: 98.10%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9950807094573975" data-text="port of discharge:"
+             data-original-text="Port of Discharge:" data-index="7" data-page="1"
+             data-edited="false" style="left:192px;top:355px;width:176px;height:26px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Port of Discharge: (Confidence: 99.51%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.965594470500946" data-text="karachl seaport, pakistan"
+             data-original-text="Karachl Seaport, Pakistan" data-index="8" data-page="1"
+             data-edited="false" style="left:406px;top:356px;width:247px;height:26px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">Karachl Seaport, Pakistan (Confidence: 96.56%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9903234243392944" data-text="packaging:"
+             data-original-text="Packaging:" data-index="9" data-page="1"
+             data-edited="false" style="left:192px;top:429px;width:109px;height:27px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">Packaging: (Confidence: 99.03%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9958410859107971" data-text="container no."
+             data-original-text="Container No." data-index="10" data-page="1"
+             data-edited="false" style="left:193px;top:503px;width:134px;height:24px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Container No. (Confidence: 99.58%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9974266886711121" data-text="package nos."
+             data-original-text="Package Nos." data-index="11" data-page="1"
+             data-edited="false" style="left:403px;top:502px;width:135px;height:29px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Package Nos. (Confidence: 99.74%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9956945180892944" data-text="qty."
+             data-original-text="Qty." data-index="12" data-page="1"
+             data-edited="false" style="left:719px;top:503px;width:49px;height:31px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Qty. (Confidence: 99.57%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9813284873962402" data-text="net / gross weight (kgs)"
+             data-original-text="Net / Gross weight (kgs)" data-index="13" data-page="1"
+             data-edited="false" style="left:805px;top:503px;width:238px;height:30px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">Net / Gross weight (kgs) (Confidence: 98.13%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9632043838500977" data-text="whsu 641 802-0 cn202501106 - cn202501114,"
+             data-original-text="WHSU 641 802-0 CN202501106 - CN202501114," data-index="14" data-page="1"
+             data-edited="false" style="left:192px;top:551px;width:479px;height:26px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">WHSU 641 802-0 CN202501106 - CN202501114, (Confidence: 96.32%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9999186992645264" data-text="26"
+             data-original-text="26" data-index="15" data-page="1"
+             data-edited="false" style="left:723px;top:551px;width:35px;height:29px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">26 (Confidence: 99.99%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9465830326080322" data-text="8.505,"
+             data-original-text="8.505," data-index="16" data-page="1"
+             data-edited="false" style="left:829px;top:554px;width:100px;height:25px;">
+            <div class="underline" style="background-color:rgb(13,241,100);"></div>
+            <div class="ocr-tooltip">8.505, (Confidence: 94.66%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9805849194526672" data-text="9.289,-"
+             data-original-text="9.289,-" data-index="17" data-page="1"
+             data-edited="false" style="left:916px;top:551px;width:81px;height:31px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">9.289,- (Confidence: 98.06%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9971255660057068" data-text="cn202501115/1-8,"
+             data-original-text="CN202501115/1-8," data-index="18" data-page="1"
+             data-edited="false" style="left:371px;top:576px;width:188px;height:26px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">CN202501115/1-8, (Confidence: 99.71%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9627379179000854" data-text="cn202501116 - cn202501118,"
+             data-original-text="CN202501116 - CN202501118," data-index="19" data-page="1"
+             data-edited="false" style="left:371px;top:601px;width:300px;height:25px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">CN202501116 - CN202501118, (Confidence: 96.27%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9963057637214661" data-text="cn202501119/1-5,cn202501120"
+             data-original-text="CN202501119/1-5,CN202501120" data-index="20" data-page="1"
+             data-edited="false" style="left:371px;top:625px;width:327px;height:25px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">CN202501119/1-5,CN202501120 (Confidence: 99.63%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9317349791526794" data-text="giving full details of shipment:"
+             data-original-text="Giving full details of shipment:" data-index="21" data-page="1"
+             data-edited="false" style="left:191px;top:697px;width:294px;height:26px;">
+            <div class="underline" style="background-color:rgb(17,237,100);"></div>
+            <div class="ocr-tooltip">Giving full details of shipment: (Confidence: 93.17%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9803457856178284" data-text="port of shipment:"
+             data-original-text="Port of shipment:" data-index="22" data-page="1"
+             data-edited="false" style="left:191px;top:746px;width:168px;height:26px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">Port of shipment: (Confidence: 98.03%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9909394979476929" data-text="shanghai seaport, china"
+             data-original-text="Shanghai Seaport, China" data-index="23" data-page="1"
+             data-edited="false" style="left:628px;top:748px;width:239px;height:27px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">Shanghai Seaport, China (Confidence: 99.09%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9778075218200684" data-text="vessel name:"
+             data-original-text="Vessel name:" data-index="24" data-page="1"
+             data-edited="false" style="left:189px;top:770px;width:135px;height:26px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">Vessel name: (Confidence: 97.78%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9881026744842529" data-text="wan hai 622 v.w021"
+             data-original-text="WAN HAI 622 V.W021" data-index="25" data-page="1"
+             data-edited="false" style="left:627px;top:772px;width:214px;height:26px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">WAN HAI 622 V.W021 (Confidence: 98.81%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9789136648178101" data-text="shipped on board date:"
+             data-original-text="Shipped on board date:" data-index="26" data-page="1"
+             data-edited="false" style="left:191px;top:796px;width:228px;height:25px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">Shipped on board date: (Confidence: 97.89%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9986780881881714" data-text="16.07.2025"
+             data-original-text="16.07.2025" data-index="27" data-page="1"
+             data-edited="false" style="left:629px;top:798px;width:114px;height:24px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">16.07.2025 (Confidence: 99.87%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.988446831703186" data-text="expected arrival date at port of destination:"
+             data-original-text="Expected arrival date at port of destination:" data-index="28" data-page="1"
+             data-edited="false" style="left:191px;top:821px;width:421px;height:25px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">Expected arrival date at port of destination: (Confidence: 98.84%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9988037943840027" data-text="06.08.2025"
+             data-original-text="06.08.2025" data-index="29" data-page="1"
+             data-edited="false" style="left:627px;top:825px;width:114px;height:20px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">06.08.2025 (Confidence: 99.88%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9973582029342651" data-text="best regards,"
+             data-original-text="Best regards," data-index="30" data-page="1"
+             data-edited="false" style="left:190px;top:894px;width:131px;height:27px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Best regards, (Confidence: 99.74%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9258161783218384" data-text="starlinger-nd eo."
+             data-original-text="STARLINGER-ND EO." data-index="31" data-page="1"
+             data-edited="false" style="left:192px;top:945px;width:232px;height:21px;">
+            <div class="underline" style="background-color:rgb(18,236,100);"></div>
+            <div class="ocr-tooltip">STARLINGER-ND EO. (Confidence: 92.58%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.933231770992279" data-text="gesellsehaepm.b.h."
+             data-original-text="GESELLSEHAEPM.B.H." data-index="32" data-page="1"
+             data-edited="false" style="left:192px;top:970px;width:236px;height:21px;">
+            <div class="underline" style="background-color:rgb(17,237,100);"></div>
+            <div class="ocr-tooltip">GESELLSEHAEPM.B.H. (Confidence: 93.32%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9094118475914001" data-text="sonngnuhrgasse-4."
+             data-original-text="SONNGNUHRGASSE-4." data-index="33" data-page="1"
+             data-edited="false" style="left:189px;top:993px;width:252px;height:25px;">
+            <div class="underline" style="background-color:rgb(23,231,100);"></div>
+            <div class="ocr-tooltip">SONNGNUHRGASSE-4. (Confidence: 90.94%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9485431909561157" data-text="1060 vienna, austria."
+             data-original-text="1060 VIENNA, AUSTRIA." data-index="34" data-page="1"
+             data-edited="false" style="left:191px;top:1019px;width:262px;height:22px;">
+            <div class="underline" style="background-color:rgb(13,241,100);"></div>
+            <div class="ocr-tooltip">1060 VIENNA, AUSTRIA. (Confidence: 94.85%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8806276917457581" data-text="starlinger g co.gesellschaft m.b.h., sonnenuhrgasse 4,1060 vlenna,austria, t:+43 1 59955-0, f:-25, www.starlinger.com"
+             data-original-text="Starlinger G Co.Gesellschaft m.b.H., Sonnenuhrgasse 4,1060 Vlenna,Austria, T:+43 1 59955-0, F:-25, www.starlInger.com" data-index="35" data-page="1"
+             data-edited="false" style="left:187px;top:1450px;width:816px;height:23px;">
+            <div class="underline" style="background-color:rgb(30,224,100);"></div>
+            <div class="ocr-tooltip">Starlinger G Co.Gesellschaft m.b.H., Sonnenuhrgasse 4,1060 Vlenna,Austria, T:+43 1 59955-0, F:-25, www.starlInger.com (Confidence: 88.06%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8612650632858276" data-text="raiffeisen bank international ag konto nr 1-00 425 611, blz 31000. bic rzbaatww,iban at26 3100 0001 0042 5611"
+             data-original-text="RaIffeIsen Bank International AG Konto Nr 1-00 425 611, BLZ 31000. BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611" data-index="36" data-page="1"
+             data-edited="false" style="left:187px;top:1469px;width:699px;height:20px;">
+            <div class="underline" style="background-color:rgb(35,219,100);"></div>
+            <div class="ocr-tooltip">RaIffeIsen Bank International AG Konto Nr 1-00 425 611, BLZ 31000. BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611 (Confidence: 86.13%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8619717955589294" data-text="unicredit bank austna ag,konto nr 0068-16169/00,blz 12000. bic bkauatww,iban at43 1100 c006 8161 6900"
+             data-original-text="UnICredIt Bank AuStna AG,Konto Nr 0068-16169/00,BLZ 12000. BIC BKAUATWW,IBAN AT43 1100 C006 8161 6900" data-index="37" data-page="1"
+             data-edited="false" style="left:187px;top:1487px;width:680px;height:20px;">
+            <div class="underline" style="background-color:rgb(35,219,100);"></div>
+            <div class="ocr-tooltip">UnICredIt Bank AuStna AG,Konto Nr 0068-16169/00,BLZ 12000. BIC BKAUATWW,IBAN AT43 1100 C006 8161 6900 (Confidence: 86.20%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8792345523834229" data-text="sitz der gesellschaft wien registriert handelsgernicht wien fn 117230y uid-nr atu 14653604 a member of starlinger group"
+             data-original-text="Sitz der Gesellschaft Wien Registriert Handelsgernicht Wien FN 117230Y UID-Nr ATU 14653604 A member of Starlinger Group" data-index="38" data-page="1"
+             data-edited="false" style="left:188px;top:1506px;width:737px;height:20px;">
+            <div class="underline" style="background-color:rgb(30,224,100);"></div>
+            <div class="ocr-tooltip">Sitz der Gesellschaft Wien Registriert Handelsgernicht Wien FN 117230Y UID-Nr ATU 14653604 A member of Starlinger Group (Confidence: 87.92%)</div>
+        </div>
+        
+            </div>
+            
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Text Modal -->
+            <div id="editModal" class="modal">
+                <div class="modal-content">
+                    <h3>Edit Text</h3>
+                    <textarea id="editTextArea"></textarea>
+                    <div class="modal-buttons">
+                        <button id="cancelEditBtn">Cancel</button>
+                        <button id="saveEditBtn">Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Text Modal -->
+            <div id="addTextModal" class="modal">
+                <div class="modal-content">
+                    <h3>Add New Text</h3>
+                    <textarea id="newTextArea" placeholder="Enter text..."></textarea>
+                    <div class="modal-buttons">
+                        <button id="cancelAddBtn">Cancel</button>
+                        <button id="confirmAddBtn">Add</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Modal -->
+            <div id="statsModal" class="modal">
+                <div class="modal-content">
+                    <h3>OCR Statistics</h3>
+                    <div id="statsContent">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Total Text Elements</div>
+                                <div class="stat-value" id="totalElements">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Average Confidence</div>
+                                <div class="stat-value" id="avgConfidence">0%</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Edited Elements</div>
+                                <div class="stat-value" id="editedElements">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Low Confidence (<50%)</div>
+                                <div class="stat-value" id="lowConfidence">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="closeStatsBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Modal -->
+            <div id="exportModal" class="modal">
+                <div class="modal-content">
+                    <h3>Export OCR Data</h3>
+                    <div class="export-options">
+                        <div class="export-option">
+                            <input type="radio" id="exportJson" name="exportFormat" value="json" checked>
+                            <label for="exportJson">JSON Format</label>
+                        </div>
+                        <div class="export-option">
+                            <input type="radio" id="exportText" name="exportFormat" value="text">
+                            <label for="exportText">Plain Text</label>
+                        </div>
+                        <div class="export-option">
+                            <input type="radio" id="exportCsv" name="exportFormat" value="csv">
+                            <label for="exportCsv">CSV Format</label>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="cancelExportBtn">Cancel</button>
+                        <button id="confirmExportBtn">Export</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drawing-box" id="drawingBox"></div>
+            
+            <script>
+                
+                // DOM Elements
+                const elements = {
+                    thresholdSlider: document.getElementById('thresholdSlider'),
+                    thresholdVal: document.getElementById('thresholdVal'),
+                    textFilter: document.getElementById('textFilter'),
+                    addTextBtn: document.getElementById('addTextBtn'),
+                    saveBtn: document.getElementById('saveBtn'),
+                    editModal: document.getElementById('editModal'),
+                    editTextArea: document.getElementById('editTextArea'),
+                    cancelEditBtn: document.getElementById('cancelEditBtn'),
+                    saveEditBtn: document.getElementById('saveEditBtn'),
+                    addTextModal: document.getElementById('addTextModal'),
+                    newTextArea: document.getElementById('newTextArea'),
+                    cancelAddBtn: document.getElementById('cancelAddBtn'),
+                    confirmAddBtn: document.getElementById('confirmAddBtn'),
+                    drawingBox: document.getElementById('drawingBox'),
+                    undoBtn: document.getElementById('undoBtn'),
+                    redoBtn: document.getElementById('redoBtn'),
+                    zoomInBtn: document.getElementById('zoomInBtn'),
+                    zoomOutBtn: document.getElementById('zoomOutBtn'),
+                    zoomResetBtn: document.getElementById('zoomResetBtn'),
+                    zoomLevel: document.getElementById('zoomLevel'),
+                    themeToggle: document.getElementById('themeToggle'),
+                    statsBtn: document.getElementById('statsBtn'),
+                    statsModal: document.getElementById('statsModal'),
+                    closeStatsBtn: document.getElementById('closeStatsBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
+                    exportModal: document.getElementById('exportModal'),
+                    cancelExportBtn: document.getElementById('cancelExportBtn'),
+                    confirmExportBtn: document.getElementById('confirmExportBtn'),
+                    pagesWrapper: document.getElementById('pagesWrapper'),
+                    collapseBtn: document.getElementById('collapseBtn'),
+                    collapseIcon: document.getElementById('collapseIcon'),
+                    toolbarSecondRow: document.getElementById('toolbarSecondRow'),
+                    progressBar: document.getElementById('progressBar'),
+                    progressFill: document.getElementById('progressFill'),
+                    progressText: document.getElementById('progressText'),
+                    thumbnailSidebar: document.getElementById('thumbnailSidebar')
+                };
+            
+
+                // State
+                let state = {
+                    currentEditElement: null,
+                    isDrawing: false,
+                    startX: 0, startY: 0, endX: 0, endY: 0,
+                    currentPageContainer: null,
+                    ocrData: { pages: [] },
+                    zoomLevel: 1.0,
+                    selectedElements: new Set(),
+                    undoStack: [],
+                    redoStack: [],
+                    toolbarCollapsed: false,
+                    currentPage: 0,
+                    totalPages: 0,
+                    loadedPages: new Set(),
+                    loading: false
+                };
+            
+
+                // Initialize
+                function init() {
+                    // Get total number of pages
+                    state.totalPages = document.querySelectorAll('.page-container').length;
+                    
+                    // Initialize OCR data structure
+                    document.querySelectorAll('.page-container').forEach(pageContainer => {
+                        const pageIdx = parseInt(pageContainer.id.split('-')[1]);
+                        state.ocrData.pages[pageIdx] = { rec_texts: [], rec_scores: [], rec_boxes: [], edited: [] };
+                        
+                        // Only process non-lazy pages initially
+                        if (!pageContainer.classList.contains('lazy-page')) {
+                            state.loadedPages.add(pageIdx);
+                            
+                            pageContainer.querySelectorAll('.ocr-line').forEach(line => {
+                                const index = parseInt(line.dataset.index);
+                                state.ocrData.pages[pageIdx].rec_texts[index] = line.dataset.originalText;
+                                state.ocrData.pages[pageIdx].rec_scores[index] = parseFloat(line.dataset.score);
+                                state.ocrData.pages[pageIdx].edited[index] = line.dataset.edited === "true";
+                                
+                                const rect = line.getBoundingClientRect();
+                                state.ocrData.pages[pageIdx].rec_boxes[index] = [
+                                    rect.left, rect.top, rect.right, rect.bottom
+                                ];
+                            });
+                        }
+                    });
+                    
+                    // Set initial zoom
+                    setZoom(state.zoomLevel);
+                    
+                    // Load toolbar state
+                    loadToolbarState();
+                    
+                    // Setup lazy loading
+                    setupLazyLoading();
+                    
+                    // Setup thumbnail navigation
+                    setupThumbnailNavigation();
+                    
+                    // Event Listeners
+                    setupEventListeners();
+                    
+                    updateColors();
+                }
+                
+                function setupEventListeners() {
+                    // Basic controls
+                    elements.thresholdSlider.addEventListener('input', updateColors);
+                    elements.textFilter.addEventListener('input', updateTextFilter);
+                    elements.saveEditBtn.addEventListener('click', saveEditedText);
+                    elements.cancelEditBtn.addEventListener('click', () => elements.editModal.style.display = 'none');
+                    elements.addTextBtn.addEventListener('click', startAddTextMode);
+                    elements.confirmAddBtn.addEventListener('click', confirmAddText);
+                    elements.cancelAddBtn.addEventListener('click', cancelAddText);
+                    elements.saveBtn.addEventListener('click', saveChanges);
+                    
+                    // Undo/Redo
+                    elements.undoBtn.addEventListener('click', undo);
+                    elements.redoBtn.addEventListener('click', redo);
+                    
+                    // Zoom controls
+                    elements.zoomInBtn.addEventListener('click', () => setZoom(state.zoomLevel + 0.1));
+                    elements.zoomOutBtn.addEventListener('click', () => setZoom(state.zoomLevel - 0.1));
+                    elements.zoomResetBtn.addEventListener('click', () => setZoom(1.0));
+                    
+                    // Theme toggle
+                    elements.themeToggle.addEventListener('click', toggleTheme);
+                    
+                    // Stats
+                    elements.statsBtn.addEventListener('click', showStats);
+                    elements.closeStatsBtn.addEventListener('click', () => elements.statsModal.style.display = 'none');
+                    
+                    // Export
+                    elements.exportBtn.addEventListener('click', () => elements.exportModal.style.display = 'block');
+                    elements.cancelExportBtn.addEventListener('click', () => elements.exportModal.style.display = 'none');
+                    elements.confirmExportBtn.addEventListener('click', exportData);
+                    
+                    // Toolbar collapse
+                    elements.collapseBtn.addEventListener('click', toggleToolbar);
+                    
+                    // OCR line click handlers with multi-select support
+                    document.querySelectorAll('.ocr-line').forEach(line => {
+                        line.addEventListener('click', (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                // Multi-select with Ctrl/Cmd
+                                e.stopPropagation();
+                                if (state.selectedElements.has(line)) {
+                                    state.selectedElements.delete(line);
+                                    line.classList.remove('selected');
+                                } else {
+                                    state.selectedElements.add(line);
+                                    line.classList.add('selected');
+                                }
+                            } else {
+                                // Single selection
+                                state.selectedElements.forEach(el => el.classList.remove('selected'));
+                                state.selectedElements.clear();
+                                
+                                e.stopPropagation();
+                                state.currentEditElement = line;
+                                elements.editTextArea.value = line.dataset.originalText;
+                                elements.editModal.style.display = 'block';
+                            }
+                        });
+                    });
+                    
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', handleKeyboardShortcuts);
+                    
+                    window.addEventListener('click', (e) => {
+                        if (e.target === elements.editModal) elements.editModal.style.display = 'none';
+                        if (e.target === elements.addTextModal) cancelAddText();
+                        if (e.target === elements.statsModal) elements.statsModal.style.display = 'none';
+                        if (e.target === elements.exportModal) elements.exportModal.style.display = 'none';
+                    });
+                }
+                
+                function handleKeyboardShortcuts(e) {
+                    // Ctrl/Cmd + S to save
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        saveChanges();
+                    }
+                    
+                    // Ctrl/Cmd + F to focus search
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        e.preventDefault();
+                        elements.textFilter.focus();
+                    }
+                    
+                    // Esc to close modals
+                    if (e.key === 'Escape') {
+                        elements.editModal.style.display = 'none';
+                        elements.addTextModal.style.display = 'none';
+                        elements.statsModal.style.display = 'none';
+                        elements.exportModal.style.display = 'none';
+                    }
+                    
+                    // Ctrl/Cmd + N to add new text
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                        e.preventDefault();
+                        startAddTextMode();
+                    }
+                    
+                    // Ctrl/Cmd + Z to undo
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault();
+                        undo();
+                    }
+                    
+                    // Ctrl/Cmd + Y to redo
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                        e.preventDefault();
+                        redo();
+                    }
+                }
+            
+
+                // Core Functions
+                function updateColors() {
+                    const threshold = parseFloat(elements.thresholdSlider.value);
+                    elements.thresholdVal.textContent = threshold.toFixed(2);
+                    
+                    document.querySelectorAll('.ocr-line').forEach(el => {
+                        const score = parseFloat(el.dataset.score);
+                        const isEdited = el.dataset.edited === "true";
+                        const color = isEdited ? 'rgb(245, 158, 11)' : 
+                                    (score >= threshold ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)');
+                        el.querySelector('.underline').style.backgroundColor = color;
+                    });
+                }
+                
+                function updateTextFilter() {
+                    const keyword = elements.textFilter.value.trim().toLowerCase();
+                    document.querySelectorAll('.ocr-line').forEach(el => {
+                        el.style.display = !keyword || el.dataset.text.includes(keyword) ? "block" : "none";
+                    });
+                }
+                
+                function saveEditedText() {
+                    if (!state.currentEditElement) return;
+                    
+                    const newText = elements.editTextArea.value;
+                    const safeText = newText.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                    const line = state.currentEditElement;
+                    const score = parseFloat(line.dataset.score);
+                    
+                    // Save state for undo
+                    saveState();
+                    
+                    // Update element
+                    line.dataset.originalText = newText;
+                    line.dataset.text = safeText.toLowerCase();
+                    line.dataset.edited = "true";
+                    line.querySelector('.ocr-tooltip').textContent = `${newText} (Confidence: ${(score*100).toFixed(1)}%) [Edited]`;
+                    
+                    if (!line.querySelector('.edited-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'edited-badge';
+                        badge.textContent = 'EDITED';
+                        line.appendChild(badge);
+                    }
+                    
+                    // Update data
+                    const pageIdx = parseInt(line.dataset.page);
+                    const index = parseInt(line.dataset.index);
+                    state.ocrData.pages[pageIdx].rec_texts[index] = newText;
+                    state.ocrData.pages[pageIdx].edited[index] = true;
+                    
+                    elements.editModal.style.display = 'none';
+                    state.currentEditElement = null;
+                    updateColors();
+                }
+            
+
+                // Add Text Functions
+                function startAddTextMode() {
+                    elements.addTextModal.style.display = 'none';
+                    elements.newTextArea.value = '';
+                    state.isDrawing = false;
+                    elements.drawingBox.style.display = 'none';
+                    
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.pointerEvents = 'auto';
+                        container.style.cursor = 'crosshair';
+                    });
+                    
+                    showNotification('Draw a bounding box where you want to add text', 'info');
+                }
+                
+                function confirmAddText() {
+                    const text = elements.newTextArea.value.trim();
+                    if (!text || elements.drawingBox.style.display !== 'block' || !state.currentPageContainer) return;
+                    
+                    const left = parseInt(elements.drawingBox.style.left);
+                    const top = parseInt(elements.drawingBox.style.top);
+                    const width = parseInt(elements.drawingBox.style.width);
+                    const height = parseInt(elements.drawingBox.style.height);
+                    
+                    if (width > 10 && height > 10) {
+                        const safeText = text.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                        const pageIdx = parseInt(state.currentPageContainer.id.split('-')[1]);
+                        
+                        // Save state for undo
+                        saveState();
+                        
+                        // Create new element
+                        const newLine = document.createElement('div');
+                        newLine.className = 'ocr-line';
+                        newLine.dataset.score = '1.0';
+                        newLine.dataset.text = safeText.toLowerCase();
+                        newLine.dataset.originalText = safeText;
+                        newLine.dataset.index = state.ocrData.pages[pageIdx].rec_texts.length;
+                        newLine.dataset.page = pageIdx;
+                        newLine.dataset.edited = "true";
+                        newLine.style.left = `${left}px`;
+                        newLine.style.top = `${top}px`;
+                        newLine.style.width = `${width}px`;
+                        newLine.style.height = `${height}px`;
+                        newLine.innerHTML = `
+                            <div class="underline" style="background-color:rgb(245, 158, 11);"></div>
+                            <div class="ocr-tooltip">${safeText} (Confidence: 100.0%) [Added]</div>
+                            <div class="edited-badge">ADDED</div>
+                        `;
+                        
+                        newLine.addEventListener('click', (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                // Multi-select with Ctrl/Cmd
+                                e.stopPropagation();
+                                if (state.selectedElements.has(newLine)) {
+                                    state.selectedElements.delete(newLine);
+                                    newLine.classList.remove('selected');
+                                } else {
+                                    state.selectedElements.add(newLine);
+                                    newLine.classList.add('selected');
+                                }
+                            } else {
+                                // Single selection
+                                state.selectedElements.forEach(el => el.classList.remove('selected'));
+                                state.selectedElements.clear();
+                                
+                                e.stopPropagation();
+                                state.currentEditElement = newLine;
+                                elements.editTextArea.value = newLine.dataset.originalText;
+                                elements.editModal.style.display = 'block';
+                            }
+                        });
+                        
+                        state.currentPageContainer.appendChild(newLine);
+                        
+                        // Update data
+                        state.ocrData.pages[pageIdx].rec_texts.push(text);
+                        state.ocrData.pages[pageIdx].rec_scores.push(1.0);
+                        state.ocrData.pages[pageIdx].edited.push(true);
+                        state.ocrData.pages[pageIdx].rec_boxes.push([left, top, left+width, top+height]);
+                        
+                        showNotification('Text added successfully', 'success');
+                    }
+                    
+                    cancelAddText();
+                    updateColors();
+                }
+                
+                function cancelAddText() {
+                    elements.addTextModal.style.display = 'none';
+                    elements.drawingBox.style.display = 'none';
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.pointerEvents = '';
+                        container.style.cursor = '';
+                    });
+                }
+            
+
+                // Save Functions
+                async function saveChanges() {
+                    showProgress(0, 'Saving...');
+                    
+                    try {
+                        // Simulate progress updates
+                        let progress = 0;
+                        const progressInterval = setInterval(() => {
+                            progress += 10;
+                            showProgress(progress, 'Saving...');
+                            if (progress >= 90) {
+                                clearInterval(progressInterval);
+                            }
+                        }, 200);
+                        
+                        const response = await fetch('http://localhost:2500/save_ocr_data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(state.ocrData)
+                        });
+                        
+                        clearInterval(progressInterval);
+                        showProgress(100, 'Complete!');
+                        
+                        if (response.ok) {
+                            showNotification('OCR data saved successfully!', 'success');
+                        } else {
+                            showNotification('Failed to save OCR data.', 'error');
+                        }
+                        
+                        // Hide progress bar after a delay
+                        setTimeout(() => {
+                            hideProgress();
+                        }, 1000);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        hideProgress();
+                        showNotification('Error saving data. See console for details.', 'error');
+                    }
+                }
+            
+
+                // Progress bar functions
+                function showProgress(percent, text) {
+                    elements.progressBar.style.display = 'block';
+                    elements.progressFill.style.width = `${percent}%`;
+                    elements.progressText.textContent = text;
+                }
+                
+                function hideProgress() {
+                    elements.progressBar.style.display = 'none';
+                }
+            
+
+                // Lazy loading functions
+                function setupLazyLoading() {
+                    // Create an IntersectionObserver to detect when pages come into view
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting && !entry.target.classList.contains('loaded')) {
+                                loadPage(entry.target);
+                            }
+                        });
+                    }, {
+                        root: elements.pagesWrapper,
+                        rootMargin: '200px', // Load pages when they're within 200px of the viewport
+                        threshold: 0.1
+                    });
+                    
+                    // Observe all lazy pages
+                    document.querySelectorAll('.lazy-page').forEach(page => {
+                        observer.observe(page);
+                    });
+                }
+                
+                function loadPage(pageElement) {
+                    const pageIdx = parseInt(pageElement.dataset.pageIndex);
+                    
+                    // Show loading state
+                    const placeholder = pageElement.querySelector('.page-placeholder');
+                    if (placeholder) {
+                        placeholder.textContent = `Loading Page ${pageIdx + 1}...`;
+                    }
+                    
+                    // Simulate loading delay for demonstration
+                    setTimeout(() => {
+                        // In a real implementation, you would fetch the page data here
+                        // For this example, we'll just show the content
+                        const content = pageElement.querySelector('.page-content');
+                        if (content) {
+                            content.style.display = 'block';
+                            pageElement.classList.add('loaded');
+                            
+                            // Hide placeholder
+                            if (placeholder) {
+                                placeholder.style.display = 'none';
+                            }
+                            
+                            // Load the image
+                            const img = content.querySelector('.ocr-image');
+                            if (img && img.dataset.src) {
+                                img.src = img.dataset.src;
+                            }
+                            
+                            // Process OCR lines for this page
+                            content.querySelectorAll('.ocr-line').forEach(line => {
+                                const index = parseInt(line.dataset.index);
+                                state.ocrData.pages[pageIdx].rec_texts[index] = line.dataset.originalText;
+                                state.ocrData.pages[pageIdx].rec_scores[index] = parseFloat(line.dataset.score);
+                                state.ocrData.pages[pageIdx].edited[index] = line.dataset.edited === "true";
+                                
+                                const rect = line.getBoundingClientRect();
+                                state.ocrData.pages[pageIdx].rec_boxes[index] = [
+                                    rect.left, rect.top, rect.right, rect.bottom
+                                ];
+                            });
+                            
+                            // Mark page as loaded
+                            state.loadedPages.add(pageIdx);
+                            
+                            // Update active thumbnail
+                            updateActiveThumbnail(pageIdx);
+                        }
+                    }, 500); // Simulate loading time
+                }
+            
+
+                // Thumbnail navigation functions
+                function setupThumbnailNavigation() {
+                    // Add click event to thumbnails
+                    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+                        thumbnail.addEventListener('click', () => {
+                            const pageIdx = parseInt(thumbnail.dataset.page);
+                            scrollToPage(pageIdx);
+                        });
+                    });
+                    
+                    // Set initial active thumbnail
+                    updateActiveThumbnail(0);
+                }
+                
+                function scrollToPage(pageIdx) {
+                    const pageElement = document.getElementById(`page-${pageIdx}`);
+                    if (pageElement) {
+                        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        state.currentPage = pageIdx;
+                        updateActiveThumbnail(pageIdx);
+                        
+                        // If the page is lazy and not loaded, load it now
+                        if (pageElement.classList.contains('lazy-page') && !pageElement.classList.contains('loaded')) {
+                            loadPage(pageElement);
+                        }
+                    }
+                }
+                
+                function updateActiveThumbnail(pageIdx) {
+                    // Remove active class from all thumbnails
+                    document.querySelectorAll('.thumbnail').forEach(thumb => {
+                        thumb.classList.remove('active');
+                    });
+                    
+                    // Add active class to current thumbnail
+                    const activeThumb = document.querySelector(`.thumbnail[data-page="${pageIdx}"]`);
+                    if (activeThumb) {
+                        activeThumb.classList.add('active');
+                    }
+                }
+            
+
+                // Undo/Redo functionality
+                function saveState() {
+                    state.undoStack.push(JSON.stringify(state.ocrData));
+                    state.redoStack = []; // Clear redo stack when new action is performed
+                    updateUndoRedoButtons();
+                }
+                
+                function undo() {
+                    if (state.undoStack.length === 0) return;
+                    
+                    const currentState = JSON.stringify(state.ocrData);
+                    state.redoStack.push(currentState);
+                    
+                    const previousState = state.undoStack.pop();
+                    state.ocrData = JSON.parse(previousState);
+                    
+                    updateUndoRedoButtons();
+                    refreshUI();
+                    showNotification('Undo successful', 'info');
+                }
+                
+                function redo() {
+                    if (state.redoStack.length === 0) return;
+                    
+                    const currentState = JSON.stringify(state.ocrData);
+                    state.undoStack.push(currentState);
+                    
+                    const nextState = state.redoStack.pop();
+                    state.ocrData = JSON.parse(nextState);
+                    
+                    updateUndoRedoButtons();
+                    refreshUI();
+                    showNotification('Redo successful', 'info');
+                }
+                
+                function updateUndoRedoButtons() {
+                    elements.undoBtn.disabled = state.undoStack.length === 0;
+                    elements.redoBtn.disabled = state.redoStack.length === 0;
+                }
+                
+                function refreshUI() {
+                    // This would refresh the entire UI based on the current state
+                    // For simplicity, we'll just reload the page
+                    location.reload();
+                }
+            
+
+                // Zoom functionality
+                function setZoom(level) {
+                    level = Math.max(0.3, Math.min(2.0, level)); // Limit zoom range
+                    state.zoomLevel = level;
+                    
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.transform = `scale(${level})`;
+                    });
+                    
+                    elements.zoomLevel.textContent = `${Math.round(level * 100)}%`;
+                }
+            
+
+                // Theme toggle
+                function toggleTheme() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                }
+                
+                // Load saved theme
+                function loadTheme() {
+                    const savedTheme = localStorage.getItem('theme') || 'dark';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                }
+            
+
+                // Toolbar collapse functionality
+                function toggleToolbar() {
+                    state.toolbarCollapsed = !state.toolbarCollapsed;
+                    
+                    if (state.toolbarCollapsed) {
+                        elements.toolbarSecondRow.classList.add('collapsed');
+                        elements.collapseIcon.innerHTML = `
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        `;
+                    } else {
+                        elements.toolbarSecondRow.classList.remove('collapsed');
+                        elements.collapseIcon.innerHTML = `
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        `;
+                    }
+                    
+                    // Save state to localStorage
+                    localStorage.setItem('toolbarCollapsed', state.toolbarCollapsed);
+                }
+                
+                function loadToolbarState() {
+                    const savedState = localStorage.getItem('toolbarCollapsed');
+                    if (savedState !== null) {
+                        state.toolbarCollapsed = savedState === 'true';
+                        
+                        if (state.toolbarCollapsed) {
+                            elements.toolbarSecondRow.classList.add('collapsed');
+                            elements.collapseIcon.innerHTML = `
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            `;
+                        }
+                    }
+                }
+            
+
+                // Statistics
+                function showStats() {
+                    let totalElements = 0;
+                    let totalConfidence = 0;
+                    let editedElements = 0;
+                    let lowConfidence = 0;
+                    
+                    state.ocrData.pages.forEach(page => {
+                        totalElements += page.rec_texts.length;
+                        page.rec_scores.forEach(score => {
+                            totalConfidence += score;
+                            if (score < 0.5) lowConfidence++;
+                        });
+                        editedElements += page.edited.filter(edited => edited).length;
+                    });
+                    
+                    const avgConfidence = totalElements > 0 ? (totalConfidence / totalElements * 100).toFixed(1) : 0;
+                    
+                    document.getElementById('totalElements').textContent = totalElements;
+                    document.getElementById('avgConfidence').textContent = `${avgConfidence}%`;
+                    document.getElementById('editedElements').textContent = editedElements;
+                    document.getElementById('lowConfidence').textContent = lowConfidence;
+                    
+                    elements.statsModal.style.display = 'block';
+                }
+            
+
+                // Export functionality
+                function exportData() {
+                    const format = document.querySelector('input[name="exportFormat"]:checked').value;
+                    let content = '';
+                    let filename = '';
+                    
+                    switch(format) {
+                        case 'json':
+                            content = JSON.stringify(state.ocrData, null, 2);
+                            filename = 'ocr_data.json';
+                            break;
+                        case 'text':
+                            content = state.ocrData.pages.map(page => 
+                                page.rec_texts.join('\n')
+                            ).join('\n\n--- Page Break ---\n\n');
+                            filename = 'ocr_text.txt';
+                            break;
+                        case 'csv':
+                            content = 'Page,Index,Text,Confidence,Edited\n';
+                            state.ocrData.pages.forEach((page, pageIndex) => {
+                                page.rec_texts.forEach((text, index) => {
+                                    content += `${pageIndex + 1},${index + 1},"${text.replace(/"/g, '""')}",${(page.rec_scores[index] * 100).toFixed(1)}%,${page.edited[index] ? 'Yes' : 'No'}\n`;
+                                });
+                            });
+                            filename = 'ocr_data.csv';
+                            break;
+                    }
+                    
+                    downloadFile(content, filename);
+                    elements.exportModal.style.display = 'none';
+                    showNotification(`Data exported as ${format.toUpperCase()}`, 'success');
+                }
+                
+                function downloadFile(content, filename) {
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            
+
+                // Modern notification system instead of alerts
+                function showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.style.position = 'fixed';
+                    notification.style.bottom = '20px';
+                    notification.style.right = '20px';
+                    notification.style.padding = '12px 20px';
+                    notification.style.borderRadius = '8px';
+                    notification.style.zIndex = '3000';
+                    notification.style.fontWeight = '500';
+                    notification.style.maxWidth = '300px';
+                    notification.style.animation = 'slideInRight 0.3s, fadeOut 0.5s 2.5s forwards';
+                    
+                    // Set color based on type
+                    if (type === 'success') {
+                        notification.style.backgroundColor = 'rgb(16, 185, 129)';
+                        notification.style.color = 'white';
+                    } else if (type === 'error') {
+                        notification.style.backgroundColor = 'rgb(239, 68, 68)';
+                        notification.style.color = 'white';
+                    } else {
+                        notification.style.backgroundColor = 'var(--bg-secondary)';
+                        notification.style.color = 'var(--text-primary)';
+                        notification.style.border = '1px solid var(--border)';
+                    }
+                    
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    
+                    // Remove notification after animation
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+                }
+            
+
+                // Drawing handlers
+                function setupDrawingHandlers() {
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.addEventListener('mousedown', (e) => {
+                            if (elements.addTextModal.style.display === 'none' && 
+                                document.querySelector('.page-container').style.cursor === 'crosshair') {
+                                e.preventDefault();
+                                state.isDrawing = true;
+                                state.startX = e.clientX - container.getBoundingClientRect().left;
+                                state.startY = e.clientY - container.getBoundingClientRect().top;
+                                
+                                elements.drawingBox.style.left = `${state.startX}px`;
+                                elements.drawingBox.style.top = `${state.startY}px`;
+                                elements.drawingBox.style.width = '0px';
+                                elements.drawingBox.style.height = '0px';
+                                elements.drawingBox.style.display = 'block';
+                                state.currentPageContainer = container;
+                            }
+                        });
+                        
+                        container.addEventListener('mousemove', (e) => {
+                            if (!state.isDrawing) return;
+                            const currentX = e.clientX - container.getBoundingClientRect().left;
+                            const currentY = e.clientY - container.getBoundingClientRect().top;
+                            
+                            elements.drawingBox.style.left = `${Math.min(state.startX, currentX)}px`;
+                            elements.drawingBox.style.top = `${Math.min(state.startY, currentY)}px`;
+                            elements.drawingBox.style.width = `${Math.abs(currentX - state.startX)}px`;
+                            elements.drawingBox.style.height = `${Math.abs(currentY - state.startY)}px`;
+                        });
+                        
+                        container.addEventListener('mouseup', (e) => {
+                            if (!state.isDrawing) return;
+                            state.isDrawing = false;
+                            state.endX = e.clientX - state.currentPageContainer.getBoundingClientRect().left;
+                            state.endY = e.clientY - state.currentPageContainer.getBoundingClientRect().top;
+                            
+                            if (Math.abs(state.endX - state.startX) > 10 && Math.abs(state.endY - state.startY) > 10) {
+                                elements.addTextModal.style.display = 'block';
+                            } else {
+                                elements.drawingBox.style.display = 'none';
+                                showNotification('Please draw a larger box', 'info');
+                            }
+                        });
+                    });
+                }
+            
+
+                // Add CSS for notification animations
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Start the application
+                loadTheme();
+                init();
+                setupDrawingHandlers();
+            
+            </script>
+        </body>
+        </html>

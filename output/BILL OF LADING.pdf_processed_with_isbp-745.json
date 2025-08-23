@@ -1,0 +1,39 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "BILL OF LADING.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Bill of Lading does not contain an express statement that one or more other bills of lading related to the referenced container or packing unit must be surrendered prior to the goods being released.",
+          "rule": "ISBP 745, paragraph e28"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the name, address, and contact details of a delivery agent or words of similar effect at or for the port of discharge.",
+          "rule": "ISBP 745, paragraph e23"
+        },
+        {
+          "finding": "Bill of Lading does not contain authentication of corrections made on the document.",
+          "rule": "ISBP 745, paragraph e24"
+        },
+        {
+          "finding": "Bill of Lading does not contain a statement indicating the payment of freight identical to that stated in the credit.",
+          "rule": "ISBP 745, paragraph e26"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Bill of Lading is titled as 'Ocean Bill of Lading' which is acceptable.",
+          "rule": "ISBP 745, paragraph e2"
+        },
+        {
+          "finding": "Bill of Lading contains a dated on-board notation which is deemed to be the date of shipment.",
+          "rule": "ISBP 745, paragraph e2"
+        },
+        {
+          "finding": "Bill of Lading indicates the place of receipt and port of loading, and there is no indication of a means of pre-carriage.",
+          "rule": "ISBP 745, paragraph e2"
+        }
+      ]
+    }
+  ]
+}

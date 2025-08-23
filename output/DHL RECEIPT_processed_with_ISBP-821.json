@@ -1,0 +1,38 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "DHL RECEIPT.txt",
+      "discrepancies": [
+        {
+          "finding": "On board notation not compliant with ICC guidance paper recommendations",
+          "rule": "ISBP 821, Section 2"
+        },
+        {
+          "finding": "Transport document not numbered correctly",
+          "rule": "ISBP 821, Section 3"
+        },
+        {
+          "finding": "No clear indication of the consequence for failure to comply with the term 'without delay'",
+          "rule": "ISBP 821, Section 4"
+        },
+        {
+          "finding": "Cities mentioned as airports not aligned with ICC opinion TA937",
+          "rule": "ISBP 821, Section 2"
+        },
+        {
+          "finding": "Non-negotiable sea waybill not compliant with ISBP 821 Section F",
+          "rule": "ISBP 821, Section F"
+        },
+        {
+          "finding": "All documents not defined in UCP 600",
+          "rule": "UCP 600, Article 19"
+        },
+        {
+          "finding": "Meaning of 'without delay' not clearly defined",
+          "rule": "UCP 600, Subarticle 16(d)"
+        }
+      ],
+      "compliances": []
+    }
+  ]
+}

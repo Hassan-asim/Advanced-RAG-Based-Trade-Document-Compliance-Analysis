@@ -1,0 +1,55 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "12.txt",
+      "discrepancies": [
+        {
+          "finding": "Bill of Lading is not titled 'Marine Bill of Lading', 'Ocean Bill of Lading', or 'Port to Port Bill of Lading'",
+          "rule": "ISBP 745, e3 a"
+        },
+        {
+          "finding": "Bill of Lading is signed by Ocean Track, Inc. without indicating the capacity in which it has been signed or the name of the carrier",
+          "rule": "ISBP 745, e5 a"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the name of the carrier identified as the carrier",
+          "rule": "ISBP 745, e5 a"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the name and address of the delivery agent at the port of discharge",
+          "rule": "ISBP 745, e23"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the actual place of shipment or destination",
+          "rule": "ISBP 745, j6"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the country of shipment or destination",
+          "rule": "ISBP 745, j6"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the number of originals issued",
+          "rule": "ISBP 745, a29 a"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Bill of Lading is signed in the form described in UCP 600 sub-article 20 a i",
+          "rule": "ISBP 745, e5 a"
+        },
+        {
+          "finding": "Bill of Lading indicates the date of shipment",
+          "rule": "ISBP 745, f5 a"
+        },
+        {
+          "finding": "Bill of Lading indicates the place of receipt and port of loading",
+          "rule": "ISBP 745, f5 a"
+        },
+        {
+          "finding": "Bill of Lading indicates the weight of the goods",
+          "rule": "ISBP 745, n4"
+        }
+      ]
+    }
+  ]
+}

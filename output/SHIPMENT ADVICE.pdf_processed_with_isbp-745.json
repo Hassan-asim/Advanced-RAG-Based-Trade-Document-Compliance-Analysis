@@ -1,0 +1,43 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "SHIPMENT ADVICE.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Invoice does not indicate the name of the beneficiary or the second beneficiary",
+          "rule": "ISBP 745, paragraph c2"
+        },
+        {
+          "finding": "Invoice does not indicate the description of the goods, services or performance",
+          "rule": "ISBP 745, paragraph c3"
+        },
+        {
+          "finding": "Invoice does not include additional charges and costs within the value shown against the stated trade term",
+          "rule": "ISBP 745, paragraph c9"
+        },
+        {
+          "finding": "Invoice does not indicate the total quantity of goods and their weight or measurement",
+          "rule": "ISBP 745, paragraph c11"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Insurance document is presented and indicates the insurance cover",
+          "rule": "ISBP 745, paragraph k15"
+        },
+        {
+          "finding": "Invoice is presented in the required format and includes the necessary details",
+          "rule": "ISBP 745, paragraph c1"
+        },
+        {
+          "finding": "Invoice includes the description of the goods, services or performance",
+          "rule": "ISBP 745, paragraph c3"
+        },
+        {
+          "finding": "Invoice includes the total quantity of goods and their weight or measurement",
+          "rule": "ISBP 745, paragraph c11"
+        }
+      ]
+    }
+  ]
+}

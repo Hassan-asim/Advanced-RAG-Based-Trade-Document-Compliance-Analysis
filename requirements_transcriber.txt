@@ -1,0 +1,7 @@
+groq
+python-dotenv
+PyMuPDF
+Pillow
+pytesseract
+langchain
+pdfplumber

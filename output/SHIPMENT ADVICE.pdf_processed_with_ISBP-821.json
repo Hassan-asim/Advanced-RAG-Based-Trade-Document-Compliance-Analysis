@@ -1,0 +1,43 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "SHIPMENT ADVICE.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Presentation of documents via email",
+          "rule": "ISBP 821, Digital Commercialisation Briefing Paper No. 1"
+        },
+        {
+          "finding": "Format of the email",
+          "rule": "ISBP 821, Digital Commercialisation Briefing Paper No. 1"
+        },
+        {
+          "finding": "Authentication of email and/or attachment",
+          "rule": "ISBP 821, Digital Commercialisation Briefing Paper No. 1"
+        },
+        {
+          "finding": "Invoice value and freight charges",
+          "rule": "UCP 600, Article 18"
+        },
+        {
+          "finding": "Invoice does not indicate goods/services/performance not called for in the credit",
+          "rule": "ISBP 821, Paragraph C13"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Multimodal transport document indicates dated on-board notation",
+          "rule": "ISBP 821, Paragraph D7"
+        },
+        {
+          "finding": "Invoice title is acceptable",
+          "rule": "ISBP 821, Paragraph C1"
+        },
+        {
+          "finding": "Presentation of paper documents is not required",
+          "rule": "UCP 600, Preliminary Considerations or General Principles"
+        }
+      ]
+    }
+  ]
+}

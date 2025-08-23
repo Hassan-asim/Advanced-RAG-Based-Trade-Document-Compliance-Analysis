@@ -1,0 +1,126 @@
+Comply
+TradeHere is the transcribed text:
+
+LETTER           OF     CREDIT                                            
+
+
+Compliance     R eport                                                    
+
+
+s       2025                                                                      
+              -                                                                   
+                2 026                                                              
+
+
+                             Discrepancy     ReportHere is the transcribed document content:
+
+
+Discrepancy Report
+
+
+1. BENEFICIARY'S MANUALLY SIGNED COMMERCIAL INVOICES (NOT EXCEEDING AMOUNT OF THIS
+CREDIT) IN OCTUPLICATE MADE OUT IN THE NAME OF APPLICANT AND CERTIFYING MERCHANDISE
+OF CHINA ORIGIN. 2. FULL SET OF CLEAN ''SHIPPED ON BOARD'' MARINE BILLS OF LADING ISSUED OR
+ENDORSED TO THE ORDER OF UNITED BANK LTD., CPU (TRADE), 2ND FLOOR, PRINTING AND
+STATIONARY BLDG., MAI-KOLACHI ROAD, KARACHI, PAKISTAN MARKED ''FREIGHT PREPAID'' AND
+MARK NOTIFY APPLICANT AND L/C ISSUING BANK. 3. INSURANCE COVERED BY APPLICANT. ALL
+SHIPMENT (S) UNDER THIS CREDIT MUST BE ADVISED BY THE BENEFICIARY BY EMAIL: INFO(AT)
+BULKFLEXIBLES.COM WITHIN 10 WORKING DAYS AFTER SHIPMENT TO M/S. PREMIER INSURANCE
+LIMITED, KARACHI PAKSITAN, REFFERING TO THEIR MARINE COVER NOTE NO.         
+2025/04/CLFMIPDT00027 DATED: 15.04. 2025GIVING FULL DETAILS OF SHIPMENT, SUCH AS L/C NO.
+INVOICE VALUE, PORT OF SHIPMENT, VESSEL NAME, SHIPPED ON BOARD DATE, EXPECTED ARRIVAL
+DATE AT PORT OF DESTINATION. A COPY OF THIS SHIPMENT ADVICE TO ACCOMPANY EACH SET OF
+DOCUMENT(S).
+
+
+Signs:
+
+
+Beneficiary's Manual Signature:
+
+
+Value: Not Signed
+Reason: The document is not signed by the beneficiary.
+
+
+Conditions:
+
+
+8  In octuplicate
+Reason: The document does not specify the number of copies provided.
+
+
+4  Not exceeding the amount of this credit
+Reason: The invoice value matches the LC amount.
+
+
+4  Made out in the name of the applicant
+Reason: The invoice is addressed to the applicant in Vienna.
+
+
+4  Certifying merchandise of China originHere is the transcribed document content:
+
+4 Certifying merchandise of China origin
+
+Reason: The document explicitly certifies China origin.
+
+
+2. Unknown Requirement
+
+Signs:
+Carrier's or Shipping Line's Signature:
+Value: BONVU INTERNATIONAL FREIGHT GMBH, AS AGENT OF CARRIER
+Reason: The signatory matches the expected Carrier's or Shipping Line's Signature.
+
+Conditions:
+
+4 Full set of clean 'Shipped On Board' bills of lading
+Reason: The document indicates a full set of clean 'Shipped On Board' bills of lading.
+
+4 Issued or endorsed to the order of United Bank Ltd., CPU (Trade)
+Reason: The document is issued to the order of United Bank Ltd., CPU (Trade).
+
+4 Marked 'Freight Prepaid'
+Reason: The document is marked 'Freight Prepaid'.
+
+
+4 Notify applicant and L/C issuing bank
+Reason: The document includes notification details for the applicant and L/C issuing bank.Here is the transcribed document content:
+
+3. Unknown Requirement
+       Signs:
+
+        Starlinger & Co. Gesellschaft m.b.H.:
+          Value: Starlinger & Co. Gesellschaft m.b.H.
+          Reason: The extracted signatory matches the expected signatory, confirming the document's authenticity and
+          authority.
+
+       Conditions:
+
+        4  Insurance covered by applicant
+           Reason: The document explicitly states that the insurance is covered by the applicant, fulfilling the
+           condition.
+
+        8  All shipments under this credit must be advised by the beneficiary by email to
+           info@bulkflexibles.com
+           Reason: The document shows the email address as info@pil.com.pk, which does not match the expected
+           info@bulkflexibles.com.
+
+        4  Advice must be sent within 10 working days after shipment
+           Reason: The advice was sent on 2025-07-17, which is within 10 working days of the shipment date
+           (2025-07-16).
+
+        4  Advice must be sent to M/s. Premier Insurance Limited, Karachi, Pakistan
+           Reason: The document is addressed to M/s. Premier Insurance Limited, Karachi, Pakistan, as required.
+
+        4  Reference to Marine Cover Note No. 2025/04/CLFMIPDT00027 dated 15.04.2025
+           Reason: The document references the correct Marine Cover Note number and date.
+
+        4  Advice must include full details of shipment (e.g., L/C No., Invoice Value, Port of Shipment, VesselHere is the transcribed document content:
+
+4  Advice must include full details of shipment (e.g., L/C No., Invoice Value, Port of Shipment, Vessel
+Name, Shipped On Board Date, Expected Arrival Date at Port of Destination)
+Reason: The document includes all required shipment details, ensuring compliance with the condition.
+
+4  A copy of this shipment advice must accompany each set of documents    
+Reason: The Shipment Advice is included as part of the submitted documents, meeting the requirement.

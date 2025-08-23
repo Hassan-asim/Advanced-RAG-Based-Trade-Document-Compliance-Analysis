@@ -1,0 +1,38 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "DHL RECEIPT.txt",
+      "discrepancies": [
+        {
+          "finding": "Document does not indicate a date of issuance",
+          "rule": "ISBP 745 A11 a"
+        },
+        {
+          "finding": "Document does not contain a date of shipment",
+          "rule": "ISBP 745 A11 a"
+        },
+        {
+          "finding": "Document does not contain a date of receipt for shipment",
+          "rule": "ISBP 745 A11 a"
+        },
+        {
+          "finding": "Document does not contain a dated on board notation",
+          "rule": "ISBP 745 A11 a"
+        },
+        {
+          "finding": "Document does not contain a correction or alteration authentication",
+          "rule": "ISBP 745 A7"
+        },
+        {
+          "finding": "Document does not contain a statement indicating the name of the entity authenticating the correction",
+          "rule": "ISBP 745 A7 b i"
+        },
+        {
+          "finding": "Document does not contain a signature or initials of the authenticating entity",
+          "rule": "ISBP 745 A7 b i"
+        }
+      ],
+      "compliances": []
+    }
+  ]
+}

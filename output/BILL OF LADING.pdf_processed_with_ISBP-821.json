@@ -1,0 +1,35 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "BILL OF LADING.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Incorrect interpretation of ISBP 821 paragraph D7",
+          "rule": "ISBP 821 paragraph D7"
+        },
+        {
+          "finding": "Incorrect application of UCP 600 Article 19",
+          "rule": "UCP 600 Article 19"
+        },
+        {
+          "finding": "Incorrect notation evidencing port of discharge",
+          "rule": "ISBP 821 paragraph E8 B"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Correctly indicated dated on board notation",
+          "rule": "ISBP 821 paragraph D7"
+        },
+        {
+          "finding": "Correctly applied UCP 600 Article 20",
+          "rule": "UCP 600 Article 20"
+        },
+        {
+          "finding": "Correctly mentioned cities as airports",
+          "rule": "ISBP 821 paragraph D1 C"
+        }
+      ]
+    }
+  ]
+}

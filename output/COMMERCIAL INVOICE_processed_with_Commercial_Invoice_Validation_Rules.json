@@ -1,0 +1,5 @@
+{
+  "error": "LLM response was not valid JSON.",
+  "details": "Expecting value: line 1 column 1 (char 0)",
+  "raw_response": "I have received the Commercial Invoice document and the rules text for analysis. However, I have identified a critical issue that prevents me from proceeding with the analysis as directed.\n\n**Problem with Provided Rules Text:**\n\nThe text you provided under `<RULES_TEXT>` is not the full text of the ISBP 745 rules. It appears to be an OCR (Optical Character Recognition) result of a document that *lists* or *indexes* various rules, such as \"parac1invoicedescriptionrequirements\" or \"ucp600rules article18commercialinvoicerequirements\". It is a list of keywords and section titles, not the actual content of the rules themselves.\n\n**Logical Impasse:**\n\nMy directive is to \"base [my] analysis exclusively on the provided ISBP 745 rules text\" and to \"cite the specific paragraph or article number from the provided"
+}

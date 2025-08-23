@@ -1,0 +1,39 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "COVERING SCHEDULE.txt",
+      "discrepancies": [
+        {
+          "finding": "Shipment advice transmission timing",
+          "rule": "ISBP 745, para E1"
+        },
+        {
+          "finding": "Shipment advice content requirements",
+          "rule": "ISBP 745, para E2"
+        },
+        {
+          "finding": "Transmission validation",
+          "rule": "ISBP 745, para E3"
+        },
+        {
+          "finding": "Notice transmission rules",
+          "rule": "ISBP 821, para 15"
+        },
+        {
+          "finding": "Content verification",
+          "rule": "ISBP 821, para 16"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Issuing bank undertaking",
+          "rule": "UCP 600, Article 7"
+        },
+        {
+          "finding": "Document examination standards",
+          "rule": "UCP 600, Article 14"
+        }
+      ]
+    }
+  ]
+}

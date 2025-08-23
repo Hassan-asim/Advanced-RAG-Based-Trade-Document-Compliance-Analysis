@@ -1,0 +1,22 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "DHL RECEIPT.txt",
+      "discrepancies": [
+        {
+          "finding": "Document does not meet the requirements of a compliant document under UCP 600",
+          "rule": "UCP 600 Article 5: Documents v. Goods, Services or Performance"
+        },
+        {
+          "finding": "Document does not contain required information for a credit",
+          "rule": "UCP 600 Article 6: Availability, Expiry Date and Place for Presentation"
+        },
+        {
+          "finding": "Document does not meet the requirements for a complying presentation",
+          "rule": "UCP 600 Article 7: Issuing Bank Undertaking"
+        }
+      ],
+      "compliances": []
+    }
+  ]
+}

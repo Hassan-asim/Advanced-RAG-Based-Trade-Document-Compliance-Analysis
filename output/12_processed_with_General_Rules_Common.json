@@ -1,0 +1,51 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "Bill of Lading",
+      "discrepancies": [
+        {
+          "finding": "Document does not specify the place for presentation",
+          "rule": "ISBP 745, para 6, signature requirements"
+        },
+        {
+          "finding": "Document does not specify the availability and expiry date",
+          "rule": "UCP 600, article 6, availability, expiry date and place for presentation"
+        },
+        {
+          "finding": "Document does not specify the standard for examination of documents",
+          "rule": "ISBP 745, para 4, document examination standards"
+        },
+        {
+          "finding": "Document does not specify the corrections and alterations procedure",
+          "rule": "ISBP 745, para 7, corrections and alterations"
+        },
+        {
+          "finding": "Document does not specify the data conflict resolution procedure",
+          "rule": "ISBP 745, para 3, data conflict resolution"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Document contains the shipper/exporter details",
+          "rule": "ISBP 745, para 2, interpretation of terms"
+        },
+        {
+          "finding": "Document contains the consignee details",
+          "rule": "ISBP 745, para 2, interpretation of terms"
+        },
+        {
+          "finding": "Document contains the notify party details",
+          "rule": "ISBP 745, para 2, interpretation of terms"
+        },
+        {
+          "finding": "Document contains the pier or airport details",
+          "rule": "ISBP 745, para 2, interpretation of terms"
+        },
+        {
+          "finding": "Document contains the exporting carrier (vessel/airline) details",
+          "rule": "ISBP 745, para 2, interpretation of terms"
+        }
+      ]
+    }
+  ]
+}

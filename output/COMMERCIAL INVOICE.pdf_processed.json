@@ -1,0 +1,47 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "COMMERCIAL INVOICE.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Invoice does not indicate a over shipment",
+          "rule": "c12"
+        },
+        {
+          "finding": "Invoice includes additional quantities of goods/services/performance as required by the credit",
+          "rule": "c12"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Invoice title is acceptable",
+          "rule": "c1"
+        },
+        {
+          "finding": "Invoice appears to have been issued by the beneficiary",
+          "rule": "c2"
+        },
+        {
+          "finding": "Description of the goods/services/performance is stated",
+          "rule": "c3"
+        },
+        {
+          "finding": "Invoice includes the total quantity of goods and their weight or measurement",
+          "rule": "c11"
+        },
+        {
+          "finding": "Invoice does not conflict with the same data appearing on other documents",
+          "rule": "c11"
+        },
+        {
+          "finding": "Invoice includes additional charges and costs within the value shown against the stated trade term",
+          "rule": "c9"
+        },
+        {
+          "finding": "Invoice does not require a signature or date",
+          "rule": "c10"
+        }
+      ]
+    }
+  ]
+}

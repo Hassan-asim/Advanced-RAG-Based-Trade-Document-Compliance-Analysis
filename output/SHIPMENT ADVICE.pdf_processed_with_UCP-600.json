@@ -1,0 +1,39 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "SHIPMENT ADVICE.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Insurance document does not indicate the amount of insurance coverage and the currency",
+          "rule": "ISBP 745, Article 28, paragraph ii"
+        },
+        {
+          "finding": "Insurance document does not indicate the type of insurance required",
+          "rule": "ISBP 745, Article 28, paragraph g"
+        },
+        {
+          "finding": "Bill of Lading does not contain an on board notation indicating the date of shipment",
+          "rule": "UCP 600, Article 20, paragraph a, iii"
+        },
+        {
+          "finding": "Bill of Lading does not indicate the port of loading stated in the credit",
+          "rule": "UCP 600, Article 20, paragraph a, iii"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Shipment advice contains the date of shipment",
+          "rule": "UCP 600, Article 20, paragraph a, iii"
+        },
+        {
+          "finding": "Shipment advice contains the port of loading and port of discharge",
+          "rule": "UCP 600, Article 20, paragraph a, iii"
+        },
+        {
+          "finding": "Shipment advice contains the vessel name",
+          "rule": "UCP 600, Article 20, paragraph a, iii"
+        }
+      ]
+    }
+  ]
+}

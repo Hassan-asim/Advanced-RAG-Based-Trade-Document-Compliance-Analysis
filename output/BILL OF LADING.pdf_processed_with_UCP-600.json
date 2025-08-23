@@ -1,0 +1,35 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "BILL OF LADING.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Bill of Lading does not indicate the port of loading stated in the credit",
+          "rule": "UCP 600 Article 20"
+        },
+        {
+          "finding": "Bill of Lading contains the indication 'intended vessel' or similar qualification in relation to the name of the vessel",
+          "rule": "UCP 600 Article 20"
+        },
+        {
+          "finding": "Bill of Lading does not contain an on board notation indicating the date of shipment and the name of the vessel",
+          "rule": "UCP 600 Article 20"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Bill of Lading indicates shipment from the port of loading to the port of discharge stated in the credit",
+          "rule": "UCP 600 Article 20"
+        },
+        {
+          "finding": "Bill of Lading is the sole original or if issued in more than one original, it is the full set as indicated on the bill of lading",
+          "rule": "UCP 600 Article 20"
+        },
+        {
+          "finding": "Bill of Lading contains terms and conditions of carriage or makes reference to another source containing the terms and conditions of carriage",
+          "rule": "UCP 600 Article 20"
+        }
+      ]
+    }
+  ]
+}

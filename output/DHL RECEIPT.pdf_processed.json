@@ -1,0 +1,18 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "DHL RECEIPT.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Carrier not identified as required by ISBP 745 H7",
+          "rule": "H7"
+        },
+        {
+          "finding": "Date of shipment not indicated as required by ISBP 745 H8",
+          "rule": "H8"
+        }
+      ],
+      "compliances": []
+    }
+  ]
+}

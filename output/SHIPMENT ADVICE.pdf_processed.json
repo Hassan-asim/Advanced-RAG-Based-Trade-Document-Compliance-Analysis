@@ -1,0 +1,39 @@
+{
+  "compliance_report": [
+    {
+      "document_name": "SHIPMENT ADVICE.pdf.txt",
+      "discrepancies": [
+        {
+          "finding": "Insurance document does not indicate the value of each insurer's cover",
+          "rule": "k16"
+        },
+        {
+          "finding": "Insurance document does not clearly indicate by addition or note that coverage is effective from a date not later than the date of shipment",
+          "rule": "k10"
+        },
+        {
+          "finding": "Invoice does not appear to have been issued by the beneficiary",
+          "rule": "c2"
+        },
+        {
+          "finding": "Invoice does not clearly indicate the description of the goods, services or performance",
+          "rule": "c3"
+        }
+      ],
+      "compliances": [
+        {
+          "finding": "Invoice is presented in the required format",
+          "rule": "c1"
+        },
+        {
+          "finding": "Insurance document is presented in the required format",
+          "rule": "k15"
+        },
+        {
+          "finding": "Document is presented in a format that is acceptable for email presentations",
+          "rule": "digital commercialisation briefing paper no 1"
+        }
+      ]
+    }
+  ]
+}

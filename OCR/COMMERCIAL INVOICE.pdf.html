@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>OCR Results Viewer</title>
+            <style>
+                
+                :root {
+                    --bg-primary: #0f172a;
+                    --bg-secondary: #1e293b;
+                    --bg-tertiary: #334155;
+                    --text-primary: #f1f5f9;
+                    --text-secondary: #cbd5e1;
+                    --accent: #3b82f6;
+                    --accent-hover: #2563eb;
+                    --success: #10b981;
+                    --warning: #f59e0b;
+                    --danger: #ef4444;
+                    --border: #334155;
+                }
+                
+                [data-theme="light"] {
+                    --bg-primary: #f8fafc;
+                    --bg-secondary: #ffffff;
+                    --bg-tertiary: #f1f5f9;
+                    --text-primary: #1e293b;
+                    --text-secondary: #64748b;
+                    --border: #e2e8f0;
+                }
+            
+
+                * {
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    margin: 0;
+                    background: var(--bg-primary);
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    color: var(--text-primary);
+                    line-height: 1.6;
+                    transition: background 0.3s, color 0.3s;
+                    overflow-x: hidden;
+                }
+                
+                .main-container {
+                    display: flex;
+                    height: 100vh;
+                }
+                
+                .thumbnail-sidebar {
+                    width: 160px;
+                    background: var(--bg-secondary);
+                    overflow-y: auto;
+                    border-right: 1px solid var(--border);
+                    padding: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                
+                .thumbnail {
+                    cursor: pointer;
+                    border: 2px solid transparent;
+                    border-radius: 6px;
+                    overflow: hidden;
+                    transition: all 0.2s;
+                    background: var(--bg-tertiary);
+                }
+                
+                .thumbnail:hover {
+                    border-color: var(--accent);
+                    transform: translateY(-2px);
+                }
+                
+                .thumbnail.active {
+                    border-color: var(--accent);
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+                }
+                
+                .thumbnail img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                }
+                
+                .thumbnail-label {
+                    padding: 6px;
+                    text-align: center;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: var(--text-secondary);
+                }
+                
+                .content-container {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+            
+
+                .progress-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background: var(--bg-primary);
+                    z-index: 3000;
+                    display: none;
+                }
+                
+                .progress-bar {
+                    height: 100%;
+                    background: var(--accent);
+                    width: 0%;
+                    transition: width 0.3s;
+                }
+                
+                .progress-text {
+                    position: absolute;
+                    top: 5px;
+                    right: 10px;
+                    font-size: 12px;
+                    color: var(--text-primary);
+                    background: var(--bg-secondary);
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                }
+            
+
+                .toolbar {
+                    background: var(--bg-secondary);
+                    border-bottom: 1px solid var(--border);
+                    position: sticky;
+                    top: 0;
+                    z-index: 1000;
+                    transition: background 0.3s, border-color 0.3s;
+                }
+                
+                .toolbar-row {
+                    padding: 12px 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .toolbar-row:first-child {
+                    border-bottom: 1px solid var(--border);
+                }
+                
+                .toolbar-left, .toolbar-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px 24px;
+                }
+                
+                .toolbar-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    border: 1px solid transparent;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar-group:hover {
+                    border-color: var(--accent);
+                }
+            
+
+                .toolbar label {
+                    font-weight: 500;
+                    color: var(--text-secondary);
+                    font-size: 13px;
+                    white-space: nowrap;
+                }
+                
+                .toolbar input[type="range"] {
+                    width: 120px;
+                    height: 5px;
+                    background: var(--bg-primary);
+                    border-radius: 3px;
+                    outline: none;
+                    -webkit-appearance: none;
+                }
+                
+                .toolbar input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    background: var(--accent);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar input[type="range"]::-webkit-slider-thumb:hover {
+                    background: var(--accent-hover);
+                    transform: scale(1.1);
+                }
+                
+                .toolbar input[type="text"] {
+                    padding: 8px 12px;
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border);
+                    border-radius: 6px;
+                    color: var(--text-primary);
+                    font-size: 13px;
+                    width: 180px;
+                    transition: all 0.2s;
+                }
+                
+                .toolbar input[type="text"]:focus {
+                    outline: none;
+                    border-color: var(--accent);
+                }
+                
+                .toolbar button {
+                    padding: 8px 14px;
+                    background: var(--accent);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                
+                .toolbar button:hover {
+                    background: var(--accent-hover);
+                }
+                
+                .toolbar button:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            
+
+                .pages-wrapper {
+                    padding: 40px 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 40px;
+                    overflow-x: hidden;
+                    overflow-y: auto;
+                    align-items: center;
+                    min-height: calc(100vh - 140px);
+                    flex: 1;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar {
+                    width: 12px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-track {
+                    background: var(--bg-tertiary);
+                    border-radius: 6px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-thumb {
+                    background: var(--accent);
+                    border-radius: 6px;
+                }
+                
+                .pages-wrapper::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent-hover);
+                }
+                
+                .page-container {
+                    position: relative;
+                    background: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    transition: transform 0.2s;
+                    flex-shrink: 0;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                    max-width: 100%;
+                    width: fit-content;
+                    min-height: 200px;
+                }
+                
+                .lazy-page {
+                    min-height: 300px;
+                }
+                
+                .page-placeholder {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 300px;
+                    background: var(--bg-tertiary);
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                }
+                
+                .ocr-image {
+                    display: block;
+                    width: auto;
+                    max-width: none;
+                    height: auto;
+                }
+            
+
+                .ocr-line {
+                    position: absolute;
+                    pointer-events: auto;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .ocr-line:hover {
+                    z-index: 10;
+                }
+                
+                .ocr-line.selected {
+                    outline: 2px solid var(--accent);
+                    outline-offset: 2px;
+                }
+                
+                .underline {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 3px;
+                    opacity: 0.9;
+                    transition: all 0.2s;
+                }
+                
+                .ocr-line[data-edited="true"] .underline {
+                    background-color: var(--warning) !important;
+                    height: 4px;
+                }
+                
+                .ocr-tooltip {
+                    visibility: hidden;
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(30, 41, 59, 0.95);
+                    color: var(--text-primary);
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    white-space: nowrap;
+                    opacity: 0;
+                    transition: opacity 0.2s, transform 0.2s;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid var(--border);
+                    margin-bottom: 8px;
+                }
+                
+                .ocr-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-width: 6px;
+                    border-style: solid;
+                    border-color: rgba(30, 41, 59, 0.95) transparent transparent transparent;
+                }
+                
+                .ocr-line:hover .ocr-tooltip {
+                    visibility: visible;
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(-4px);
+                }
+            
+
+                .modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 2000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(15, 23, 42, 0.8);
+                    backdrop-filter: blur(4px);
+                    animation: fadeIn 0.2s;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                .modal-content {
+                    background-color: var(--bg-secondary);
+                    margin: 10% auto;
+                    padding: 24px;
+                    border: 1px solid var(--border);
+                    width: 50%;
+                    max-width: 600px;
+                    border-radius: 12px;
+                    animation: slideIn 0.3s;
+                    transition: background 0.3s, border-color 0.3s;
+                }
+                
+                @keyframes slideIn {
+                    from { transform: translateY(-20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                
+                .modal h3 {
+                    margin-top: 0;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                
+                .modal-buttons {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+                
+                .modal textarea {
+                    width: 100%;
+                    min-height: 120px;
+                    background: var(--bg-tertiary);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border);
+                    padding: 12px;
+                    border-radius: 6px;
+                    font-family: inherit;
+                    font-size: 14px;
+                    resize: vertical;
+                    transition: all 0.2s;
+                }
+                
+                .modal textarea:focus {
+                    outline: none;
+                    border-color: var(--accent);
+                }
+                
+                .modal button {
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .modal button:first-of-type {
+                    background: var(--bg-tertiary);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border);
+                }
+                
+                .modal button:first-of-type:hover {
+                    background: var(--border);
+                }
+                
+                .modal button:last-of-type {
+                    background: var(--accent);
+                    color: white;
+                    border: none;
+                }
+                
+                .modal button:last-of-type:hover {
+                    background: var(--accent-hover);
+                }
+            
+
+                .drawing-box {
+                    position: absolute;
+                    border: 2px dashed var(--accent);
+                    background: rgba(59, 130, 246, 0.1);
+                    pointer-events: none;
+                    display: none;
+                    border-radius: 4px;
+                }
+                
+                .edited-badge {
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    background: var(--warning);
+                    color: var(--bg-primary);
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 6px;
+                    border-radius: 4px;
+                    display: none;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                .ocr-line[data-edited="true"] .edited-badge {
+                    display: block;
+                }
+                
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 16px;
+                    margin-top: 16px;
+                }
+                
+                .stat-card {
+                    background: var(--bg-tertiary);
+                    padding: 16px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                }
+                
+                .stat-label {
+                    font-size: 14px;
+                    color: var(--text-secondary);
+                    margin-bottom: 4px;
+                }
+                
+                .stat-value {
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                
+                .export-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 16px;
+                }
+                
+                .export-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                
+                .export-option:hover {
+                    border-color: var(--accent);
+                }
+                
+                .export-option input[type="radio"] {
+                    margin: 0;
+                }
+                
+                .export-option label {
+                    flex: 1;
+                    cursor: pointer;
+                    margin: 0;
+                    font-weight: 500;
+                }
+                
+                /* Collapsible toolbar styles */
+                #toolbarSecondRow {
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                }
+                
+                #toolbarSecondRow.collapsed {
+                    max-height: 0;
+                    padding: 0;
+                    border: none;
+                }
+                
+                .collapse-btn {
+                    background: transparent !important;
+                    padding: 6px !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: 4px !important;
+                }
+                
+                .collapse-btn:hover {
+                    background: var(--bg-tertiary) !important;
+                }
+                
+                .toolbar-icon {
+                    width: 16px;
+                    height: 16px;
+                }
+                
+                .threshold-value {
+                    background: var(--bg-primary);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    color: var(--accent);
+                    min-width: 40px;
+                    text-align: center;
+                    font-size: 13px;
+                }
+            
+            </style>
+        </head>
+        <body>
+            <div id="progressBar" class="progress-container">
+                <div id="progressFill" class="progress-bar"></div>
+                <div id="progressText" class="progress-text">0%</div>
+            </div>
+            
+            <div class="main-container">
+                <div class="content-container">
+                    <div class="toolbar">
+                        <!-- First Row: Main Controls -->
+                        <div class="toolbar-row">
+                            <div class="toolbar-left">
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    <label>OCR Viewer</label>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    </svg>
+                                    <label>Confidence:</label>
+                                    <input type="range" min="0" max="1" step="0.01" value="0.9" id="thresholdSlider">
+                                    <span class="threshold-value" id="thresholdVal">0.9</span>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <input type="text" id="textFilter" placeholder="Search text...">
+                                </div>
+                            </div>
+                            
+                            <div class="toolbar-right">
+                                <div class="toolbar-group">
+                                    <button id="addTextBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add Text
+                                    </button>
+                                    <button id="saveBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                            <polyline points="7 3 7 8 15 8"></polyline>
+                                        </svg>
+                                        Save
+                                    </button>
+                                    <button id="collapseBtn" class="collapse-btn" title="Toggle Toolbar">
+                                        <svg class="toolbar-icon" id="collapseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Second Row: Additional Controls -->
+                        <div class="toolbar-row" id="toolbarSecondRow">
+                            <div class="toolbar-left">
+                                <div class="toolbar-group">
+                                    <button id="undoBtn" disabled>
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 7v6h6"></path>
+                                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                                        </svg>
+                                    </button>
+                                    <button id="redoBtn" disabled>
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 7v6h-6"></path>
+                                            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="zoomOutBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                                        </svg>
+                                    </button>
+                                    <span id="zoomLevel">100%</span>
+                                    <button id="zoomInBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                                        </svg>
+                                    </button>
+                                    <button id="zoomResetBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="1 4 1 10 7 10"></polyline>
+                                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="toolbar-right">
+                                <div class="toolbar-group">
+                                    <button id="themeToggle">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="5"></circle>
+                                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="statsBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                                        </svg>
+                                        Stats
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button id="exportBtn">
+                                        <svg class="toolbar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                        Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pages-wrapper" id="pagesWrapper">
+                        
+            <div class="page-container" id="page-0">
+                <img class="ocr-image" src="res\1\0.png" alt="Page 0" />
+                
+        <div class="ocr-line" data-score="0.9606903195381165" data-text="copy"
+             data-original-text="COPY" data-index="0" data-page="0"
+             data-edited="false" style="left:857px;top:80px;width:180px;height:67px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">COPY (Confidence: 96.07%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9992642402648926" data-text="starlinger"
+             data-original-text="Starlinger" data-index="1" data-page="0"
+             data-edited="false" style="left:536px;top:152px;width:167px;height:45px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Starlinger (Confidence: 99.93%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9634812474250793" data-text="bulk flexible pakistan pvt ltd"
+             data-original-text="BULK FLEXIBLE PAKISTAN PVT LTD" data-index="2" data-page="0"
+             data-edited="false" style="left:197px;top:233px;width:336px;height:21px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">BULK FLEXIBLE PAKISTAN PVT LTD (Confidence: 96.35%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9981110692024231" data-text="1/2"
+             data-original-text="1/2" data-index="3" data-page="0"
+             data-edited="false" style="left:986px;top:234px;width:42px;height:27px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">1/2 (Confidence: 99.81%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9664717316627502" data-text="501 5th floor business avenue"
+             data-original-text="501 5TH FLOOR BUSINESS AVENUE" data-index="4" data-page="0"
+             data-edited="false" style="left:197px;top:256px;width:341px;height:23px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">501 5TH FLOOR BUSINESS AVENUE (Confidence: 96.65%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9841129779815674" data-text="shahrah e faisal"
+             data-original-text="SHAHRAH E FAISAL" data-index="5" data-page="0"
+             data-edited="false" style="left:196px;top:281px;width:190px;height:22px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">SHAHRAH E FAISAL (Confidence: 98.41%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9521593451499939" data-text="karachi- pakistan"
+             data-original-text="KARACHI- PAKISTAN" data-index="6" data-page="0"
+             data-edited="false" style="left:195px;top:306px;width:212px;height:22px;">
+            <div class="underline" style="background-color:rgb(12,242,100);"></div>
+            <div class="ocr-tooltip">KARACHI- PAKISTAN (Confidence: 95.22%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9843764901161194" data-text="vienna, 2025 07 12"
+             data-original-text="Vienna, 2025 07 12" data-index="7" data-page="0"
+             data-edited="false" style="left:854px;top:332px;width:191px;height:26px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">Vienna, 2025 07 12 (Confidence: 98.44%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9993863105773926" data-text="iba"
+             data-original-text="IBA" data-index="8" data-page="0"
+             data-edited="false" style="left:854px;top:357px;width:42px;height:24px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">IBA (Confidence: 99.94%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9402410984039307" data-text="commercial invoice no.ma4101597"
+             data-original-text="COMMERCIAL INVOICE NO.MA4101597" data-index="9" data-page="0"
+             data-edited="false" style="left:195px;top:405px;width:539px;height:23px;">
+            <div class="underline" style="background-color:rgb(15,239,100);"></div>
+            <div class="ocr-tooltip">COMMERCIAL INVOICE NO.MA4101597 (Confidence: 94.02%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9449754953384399" data-text="ref.: irrevocable confirmed documentary credit (l/c no.) number 0578ilc074195"
+             data-original-text="Ref.: Irrevocable confirmed Documentary Credit (L/C No.) Number 0578ILC074195" data-index="10" data-page="0"
+             data-edited="false" style="left:194px;top:502px;width:803px;height:27px;">
+            <div class="underline" style="background-color:rgb(14,240,100);"></div>
+            <div class="ocr-tooltip">Ref.: Irrevocable confirmed Documentary Credit (L/C No.) Number 0578ILC074195 (Confidence: 94.50%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.976434051990509" data-text="insurance covered by applicant."
+             data-original-text="Insurance covered by applicant." data-index="11" data-page="0"
+             data-edited="false" style="left:260px;top:528px;width:305px;height:24px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">Insurance covered by applicant. (Confidence: 97.64%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9547789692878723" data-text="marine cover note no. 2025/04/clfmipdt00027 dated: 15.04.2025"
+             data-original-text="Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025" data-index="12" data-page="0"
+             data-edited="false" style="left:260px;top:551px;width:648px;height:27px;">
+            <div class="underline" style="background-color:rgb(11,243,100);"></div>
+            <div class="ocr-tooltip">Marine Cover Note No. 2025/04/CLFMIPDT00027 dated: 15.04.2025 (Confidence: 95.48%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9330752491950989" data-text="h.s. code no. 8446 2900 ntn no. 2679948-7"
+             data-original-text="H.S. Code No. 8446 2900 NTN No. 2679948-7" data-index="13" data-page="0"
+             data-edited="false" style="left:261px;top:577px;width:437px;height:23px;">
+            <div class="underline" style="background-color:rgb(17,237,100);"></div>
+            <div class="ocr-tooltip">H.S. Code No. 8446 2900 NTN No. 2679948-7 (Confidence: 93.31%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9704458713531494" data-text="job no. ma2053480"
+             data-original-text="Job No. MA2053480" data-index="14" data-page="0"
+             data-edited="false" style="left:260px;top:602px;width:192px;height:22px;">
+            <div class="underline" style="background-color:rgb(7,247,100);"></div>
+            <div class="ocr-tooltip">Job No. MA2053480 (Confidence: 97.04%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9582149982452393" data-text="circular loom rx 6.o pro (with standard accessories)"
+             data-original-text="CIRCULAR LOOM RX 6.O PRO (WITH STANDARD ACCESSORIES)" data-index="15" data-page="0"
+             data-edited="false" style="left:194px;top:648px;width:665px;height:28px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">CIRCULAR LOOM RX 6.O PRO (WITH STANDARD ACCESSORIES) (Confidence: 95.82%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9229509234428406" data-text="qty: 4 units at rate of usd. 20,385 per unit"
+             data-original-text="QTY: 4 UNITS AT RATE OF USD. 20,385 PER UNIT" data-index="16" data-page="0"
+             data-edited="false" style="left:194px;top:674px;width:520px;height:25px;">
+            <div class="underline" style="background-color:rgb(19,235,100);"></div>
+            <div class="ocr-tooltip">QTY: 4 UNITS AT RATE OF USD. 20,385 PER UNIT (Confidence: 92.30%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9463480710983276" data-text="plus freight charges of usd. 2,46o/-"
+             data-original-text="PLUS FREIGHT CHARGES OF USD. 2,46O/-" data-index="17" data-page="0"
+             data-edited="false" style="left:193px;top:699px;width:442px;height:26px;">
+            <div class="underline" style="background-color:rgb(13,241,100);"></div>
+            <div class="ocr-tooltip">PLUS FREIGHT CHARGES OF USD. 2,46O/- (Confidence: 94.63%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.961770236492157" data-text="cfr karachi seaport, pakistan"
+             data-original-text="CFR KARACHI SEAPORT, PAKISTAN" data-index="18" data-page="0"
+             data-edited="false" style="left:193px;top:723px;width:374px;height:25px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">CFR KARACHI SEAPORT, PAKISTAN (Confidence: 96.18%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9287927150726318" data-text="all other details as per proforma invoice no. pkgreif-o16.1"
+             data-original-text="ALL OTHER DETAILS AS PER PROFORMA INVOICE NO. PKGREIF-O16.1" data-index="19" data-page="0"
+             data-edited="false" style="left:193px;top:748px;width:735px;height:26px;">
+            <div class="underline" style="background-color:rgb(18,236,100);"></div>
+            <div class="ocr-tooltip">ALL OTHER DETAILS AS PER PROFORMA INVOICE NO. PKGREIF-O16.1 (Confidence: 92.88%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9734354019165039" data-text="dated: 08-apr-2025"
+             data-original-text="DATED: 08-APR-2025" data-index="20" data-page="0"
+             data-edited="false" style="left:195px;top:775px;width:227px;height:20px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">DATED: 08-APR-2025 (Confidence: 97.34%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9588274955749512" data-text="total invoice value cfr karachi seaport, pakistan"
+             data-original-text="TOTAL INVOICE VALUE CFR KARACHI SEAPORT, PAKISTAN" data-index="21" data-page="0"
+             data-edited="false" style="left:193px;top:821px;width:620px;height:27px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">TOTAL INVOICE VALUE CFR KARACHI SEAPORT, PAKISTAN (Confidence: 95.88%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9917910695075989" data-text="usd 84.000,00"
+             data-original-text="USD 84.000,00" data-index="22" data-page="0"
+             data-edited="false" style="left:859px;top:825px;width:161px;height:23px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">USD 84.000,00 (Confidence: 99.18%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9244817495346069" data-text="(acc. to icc incoterms 2020)"
+             data-original-text="(acc. to ICC Incoterms 2020)" data-index="23" data-page="0"
+             data-edited="false" style="left:193px;top:846px;width:279px;height:25px;">
+            <div class="underline" style="background-color:rgb(19,235,100);"></div>
+            <div class="ocr-tooltip">(acc. to ICC Incoterms 2020) (Confidence: 92.45%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9697415232658386" data-text="we are herewith certifying merchandise of china origin."
+             data-original-text="WE ARE HEREWITH CERTIFYING MERCHANDISE OF CHINA ORIGIN." data-index="24" data-page="0"
+             data-edited="false" style="left:297px;top:922px;width:639px;height:23px;">
+            <div class="underline" style="background-color:rgb(7,247,100);"></div>
+            <div class="ocr-tooltip">WE ARE HEREWITH CERTIFYING MERCHANDISE OF CHINA ORIGIN. (Confidence: 96.97%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9800498485565186" data-text="port of loading:"
+             data-original-text="Port of Loading:" data-index="25" data-page="0"
+             data-edited="false" style="left:192px;top:1016px;width:155px;height:28px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">Port of Loading: (Confidence: 98.00%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9893307089805603" data-text="shanghai seaport, china"
+             data-original-text="Shanghai Seaport, China" data-index="26" data-page="0"
+             data-edited="false" style="left:404px;top:1019px;width:237px;height:26px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">Shanghai Seaport, China (Confidence: 98.93%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9812400341033936" data-text="port of discharge:"
+             data-original-text="Port of Discharge:" data-index="27" data-page="0"
+             data-edited="false" style="left:192px;top:1041px;width:174px;height:27px;">
+            <div class="underline" style="background-color:rgb(4,250,100);"></div>
+            <div class="ocr-tooltip">Port of Discharge: (Confidence: 98.12%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9868249297142029" data-text="karachi seaport, pakistan"
+             data-original-text="Karachi Seaport, Pakistan" data-index="28" data-page="0"
+             data-edited="false" style="left:404px;top:1043px;width:245px;height:26px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">Karachi Seaport, Pakistan (Confidence: 98.68%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8729738593101501" data-text="starlinger  co.gesellschaft m.b.h.,sonnenuhrgasse 4,100 vienna, austria,t:+43 1 59955-0,f:-25,www.starlinger.com"
+             data-original-text="Starlinger  Co.Gesellschaft m.b.H.,Sonnenuhrgasse 4,100 Vienna, Austria,T:+43 1 59955-0,F:-25,www.starlinger.com" data-index="29" data-page="0"
+             data-edited="false" style="left:187px;top:1448px;width:813px;height:23px;">
+            <div class="underline" style="background-color:rgb(32,222,100);"></div>
+            <div class="ocr-tooltip">Starlinger  Co.Gesellschaft m.b.H.,Sonnenuhrgasse 4,100 Vienna, Austria,T:+43 1 59955-0,F:-25,www.starlinger.com (Confidence: 87.30%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8591356873512268" data-text="raiffeisen bank internatanal ag konto nr 1-00 425 611,blz 31000. bic rzbaatww iban at26 3100 0001 0042 5611"
+             data-original-text="RaIffeIsen Bank Internatanal AG Konto Nr 1-00 425 611,BLZ 31000. BIC RZBAATWW IBAN AT26 3100 0001 0042 5611" data-index="30" data-page="0"
+             data-edited="false" style="left:186px;top:1466px;width:698px;height:22px;">
+            <div class="underline" style="background-color:rgb(35,219,100);"></div>
+            <div class="ocr-tooltip">RaIffeIsen Bank Internatanal AG Konto Nr 1-00 425 611,BLZ 31000. BIC RZBAATWW IBAN AT26 3100 0001 0042 5611 (Confidence: 85.91%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8839176893234253" data-text="unicredit bank austra ag,konto nr 0068-16169/00. blz 12000, bic bkauatww,iban at43 1100 0006 8161 6900"
+             data-original-text="UnICredit Bank Austra AG,Konto Nr 0068-16169/00. BLZ 12000, BIC BKAUATWW,IBAN AT43 1100 0006 8161 6900" data-index="31" data-page="0"
+             data-edited="false" style="left:187px;top:1485px;width:677px;height:21px;">
+            <div class="underline" style="background-color:rgb(29,225,100);"></div>
+            <div class="ocr-tooltip">UnICredit Bank Austra AG,Konto Nr 0068-16169/00. BLZ 12000, BIC BKAUATWW,IBAN AT43 1100 0006 8161 6900 (Confidence: 88.39%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.7472445964813232" data-text="sitz der gesellschaf wen regstnert handelsgenct wenfn11723yuid-nr atu146364 amember of starlner grou"
+             data-original-text="Sitz der Gesellschaf Wen Regstnert Handelsgenct WenFN11723YUID-Nr ATU146364 Amember of Starlner Grou" data-index="32" data-page="0"
+             data-edited="false" style="left:187px;top:1502px;width:736px;height:25px;">
+            <div class="underline" style="background-color:rgb(64,190,100);"></div>
+            <div class="ocr-tooltip">Sitz der Gesellschaf Wen Regstnert Handelsgenct WenFN11723YUID-Nr ATU146364 Amember of Starlner Grou (Confidence: 74.72%)</div>
+        </div>
+        
+            </div>
+            
+
+            <div class="page-container" id="page-1">
+                <img class="ocr-image" src="res\1\1.png" alt="Page 1" />
+                
+        <div class="ocr-line" data-score="0.9994521141052246" data-text="starlinger"
+             data-original-text="Starlinger" data-index="0" data-page="1"
+             data-edited="false" style="left:537px;top:153px;width:165px;height:45px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Starlinger (Confidence: 99.95%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9794622659683228" data-text="continuation commercial invoice no. ma4101597"
+             data-original-text="Continuation Commercial Invoice No. MA4101597" data-index="1" data-page="1"
+             data-edited="false" style="left:196px;top:234px;width:473px;height:24px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">Continuation Commercial Invoice No. MA4101597 (Confidence: 97.95%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9990694522857666" data-text="2/2"
+             data-original-text="2/2" data-index="2" data-page="1"
+             data-edited="false" style="left:988px;top:236px;width:42px;height:28px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">2/2 (Confidence: 99.91%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9943439364433289" data-text="packaging:"
+             data-original-text="Packaging:" data-index="3" data-page="1"
+             data-edited="false" style="left:194px;top:330px;width:109px;height:28px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Packaging: (Confidence: 99.43%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9942030310630798" data-text="container no."
+             data-original-text="Container No." data-index="4" data-page="1"
+             data-edited="false" style="left:194px;top:404px;width:135px;height:26px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Container No. (Confidence: 99.42%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9654016494750977" data-text="package nos."
+             data-original-text="Package Nos." data-index="5" data-page="1"
+             data-edited="false" style="left:407px;top:405px;width:132px;height:27px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">Package Nos. (Confidence: 96.54%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.991931676864624" data-text="qty."
+             data-original-text="Qty." data-index="6" data-page="1"
+             data-edited="false" style="left:721px;top:406px;width:49px;height:31px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">Qty. (Confidence: 99.19%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9588360786437988" data-text="net / gross weight (kgs)"
+             data-original-text="Net / Gross weight (kgs)" data-index="7" data-page="1"
+             data-edited="false" style="left:807px;top:406px;width:239px;height:31px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">Net / Gross weight (kgs) (Confidence: 95.88%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9521463513374329" data-text="whsu 641 802-0"
+             data-original-text="WHSU 641 802-0" data-index="8" data-page="1"
+             data-edited="false" style="left:195px;top:453px;width:172px;height:23px;">
+            <div class="underline" style="background-color:rgb(12,242,100);"></div>
+            <div class="ocr-tooltip">WHSU 641 802-0 (Confidence: 95.21%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9669014811515808" data-text="cn202501106- cn202501114,"
+             data-original-text="CN202501106- CN202501114," data-index="9" data-page="1"
+             data-edited="false" style="left:355px;top:453px;width:318px;height:26px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">CN202501106- CN202501114, (Confidence: 96.69%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9999621510505676" data-text="26"
+             data-original-text="26" data-index="10" data-page="1"
+             data-edited="false" style="left:726px;top:454px;width:33px;height:26px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">26 (Confidence: 100.00%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9875597357749939" data-text="8.505,-"
+             data-original-text="8.505,-" data-index="11" data-page="1"
+             data-edited="false" style="left:829px;top:455px;width:82px;height:28px;">
+            <div class="underline" style="background-color:rgb(3,251,100);"></div>
+            <div class="ocr-tooltip">8.505,- (Confidence: 98.76%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9622790217399597" data-text="9.289,-"
+             data-original-text="9.289,-" data-index="12" data-page="1"
+             data-edited="false" style="left:920px;top:453px;width:79px;height:31px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">9.289,- (Confidence: 96.23%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.991266131401062" data-text="cn202501115/1-8,"
+             data-original-text="CN202501115/1-8," data-index="13" data-page="1"
+             data-edited="false" style="left:373px;top:477px;width:187px;height:27px;">
+            <div class="underline" style="background-color:rgb(2,252,100);"></div>
+            <div class="ocr-tooltip">CN202501115/1-8, (Confidence: 99.13%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.977466881275177" data-text="cn202501116 - cn202501118,"
+             data-original-text="CN202501116 - CN202501118," data-index="14" data-page="1"
+             data-edited="false" style="left:373px;top:502px;width:301px;height:27px;">
+            <div class="underline" style="background-color:rgb(5,249,100);"></div>
+            <div class="ocr-tooltip">CN202501116 - CN202501118, (Confidence: 97.75%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9967154264450073" data-text="cn202501119/1-5,cn202501120"
+             data-original-text="CN202501119/1-5,CN202501120" data-index="15" data-page="1"
+             data-edited="false" style="left:373px;top:527px;width:327px;height:25px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">CN202501119/1-5,CN202501120 (Confidence: 99.67%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9748663902282715" data-text="buyer is aware of the current sanctlons of the european unlon against the"
+             data-original-text="Buyer is aware of the current sanctlons of the European Unlon against the" data-index="16" data-page="1"
+             data-edited="false" style="left:194px;top:622px;width:783px;height:26px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">Buyer is aware of the current sanctlons of the European Unlon against the (Confidence: 97.49%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9945916533470154" data-text="russian federation and belarus and undertakes not to re-export the goods to"
+             data-original-text="Russian Federation and Belarus and undertakes not to re-export the goods to" data-index="17" data-page="1"
+             data-edited="false" style="left:193px;top:645px;width:819px;height:29px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">Russian Federation and Belarus and undertakes not to re-export the goods to (Confidence: 99.46%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9633193016052246" data-text="the russlan federatlon or belarus or to resell the goods to a third party who has"
+             data-original-text="the Russlan Federatlon or Belarus or to resell the goods to a third party who has" data-index="18" data-page="1"
+             data-edited="false" style="left:192px;top:669px;width:852px;height:30px;">
+            <div class="underline" style="background-color:rgb(9,245,100);"></div>
+            <div class="ocr-tooltip">the Russlan Federatlon or Belarus or to resell the goods to a third party who has (Confidence: 96.33%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9708157181739807" data-text="not undertaken not to export the goods to the russlan federatlon or belarus. in"
+             data-original-text="not undertaken not to export the goods to the Russlan Federatlon or Belarus. In" data-index="19" data-page="1"
+             data-edited="false" style="left:192px;top:695px;width:848px;height:29px;">
+            <div class="underline" style="background-color:rgb(7,247,100);"></div>
+            <div class="ocr-tooltip">not undertaken not to export the goods to the Russlan Federatlon or Belarus. In (Confidence: 97.08%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9763147234916687" data-text="the event buyer`s vlolation of thls undertaking, the seller is entitled to"
+             data-original-text="the event Buyer`s vlolation of thls undertaking, the Seller is entitled to" data-index="20" data-page="1"
+             data-edited="false" style="left:192px;top:720px;width:753px;height:28px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">the event Buyer`s vlolation of thls undertaking, the Seller is entitled to (Confidence: 97.63%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9651739597320557" data-text="immediately rescind from this present contract and expressly reserves the right"
+             data-original-text="immediately rescind from this present Contract and expressly reserves the right" data-index="21" data-page="1"
+             data-edited="false" style="left:192px;top:744px;width:848px;height:29px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">immediately rescind from this present Contract and expressly reserves the right (Confidence: 96.52%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9938259720802307" data-text="to take further legal actlon against the buyer."
+             data-original-text="to take further legal actlon against the Buyer." data-index="22" data-page="1"
+             data-edited="false" style="left:191px;top:768px;width:485px;height:28px;">
+            <div class="underline" style="background-color:rgb(1,253,100);"></div>
+            <div class="ocr-tooltip">to take further legal actlon against the Buyer. (Confidence: 99.38%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9979555606842041" data-text="payment:"
+             data-original-text="Payment:" data-index="23" data-page="1"
+             data-edited="false" style="left:191px;top:856px;width:96px;height:27px;">
+            <div class="underline" style="background-color:rgb(0,254,100);"></div>
+            <div class="ocr-tooltip">Payment: (Confidence: 99.80%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9732284545898438" data-text="with irrevocable confirmed documentary credit (l/c) number 0578ilc074195 issued by"
+             data-original-text="With Irrevocable confirmed Documentary Credit (L/C) Number 0578ILC074195 issued by" data-index="24" data-page="1"
+             data-edited="false" style="left:191px;top:881px;width:844px;height:30px;">
+            <div class="underline" style="background-color:rgb(6,248,100);"></div>
+            <div class="ocr-tooltip">With Irrevocable confirmed Documentary Credit (L/C) Number 0578ILC074195 issued by (Confidence: 97.32%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9577786326408386" data-text="united bank limited, karachi, pakistan"
+             data-original-text="United Bank Limited, Karachi, Pakistan" data-index="25" data-page="1"
+             data-edited="false" style="left:191px;top:906px;width:371px;height:27px;">
+            <div class="underline" style="background-color:rgb(10,244,100);"></div>
+            <div class="ocr-tooltip">United Bank Limited, Karachi, Pakistan (Confidence: 95.78%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9370971322059631" data-text="starlinger and co."
+             data-original-text="STARLINGER AND CO." data-index="26" data-page="1"
+             data-edited="false" style="left:191px;top:1005px;width:236px;height:25px;">
+            <div class="underline" style="background-color:rgb(16,238,100);"></div>
+            <div class="ocr-tooltip">STARLINGER AND CO. (Confidence: 93.71%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9650202989578247" data-text="gesellschaftm.b.h."
+             data-original-text="GESELLSCHAFTM.B.H." data-index="27" data-page="1"
+             data-edited="false" style="left:193px;top:1032px;width:236px;height:20px;">
+            <div class="underline" style="background-color:rgb(8,246,100);"></div>
+            <div class="ocr-tooltip">GESELLSCHAFTM.B.H. (Confidence: 96.50%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9440271854400635" data-text="sonnenuhrgasse 4.,"
+             data-original-text="SONNENUHRGASSE 4.," data-index="28" data-page="1"
+             data-edited="false" style="left:191px;top:1054px;width:243px;height:25px;">
+            <div class="underline" style="background-color:rgb(14,240,100);"></div>
+            <div class="ocr-tooltip">SONNENUHRGASSE 4., (Confidence: 94.40%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.9475863575935364" data-text="1060 vienna,austria."
+             data-original-text="1060 VIENNA,AUSTRIA." data-index="29" data-page="1"
+             data-edited="false" style="left:192px;top:1080px;width:260px;height:22px;">
+            <div class="underline" style="background-color:rgb(13,241,100);"></div>
+            <div class="ocr-tooltip">1060 VIENNA,AUSTRIA. (Confidence: 94.76%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.885779619216919" data-text="starllnger & co. gesellschaft m.b.h., sonnenuhrgasse 4,1060 vlenna, austria, t: +43 1 59955-0, f:-25,www.starlinger.com"
+             data-original-text="Starllnger & Co. Gesellschaft m.b.H., Sonnenuhrgasse 4,1060 Vlenna, Austria, T: +43 1 59955-0, F:-25,www.starlinger.com" data-index="30" data-page="1"
+             data-edited="false" style="left:187px;top:1451px;width:815px;height:22px;">
+            <div class="underline" style="background-color:rgb(29,225,100);"></div>
+            <div class="ocr-tooltip">Starllnger & Co. Gesellschaft m.b.H., Sonnenuhrgasse 4,1060 Vlenna, Austria, T: +43 1 59955-0, F:-25,www.starlinger.com (Confidence: 88.58%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8775144219398499" data-text="raiffeisen bank international ag,konto nr 1-00 425 611, blz 31000, bic rzbaatww,iban at26 3100 0001 0042 5611"
+             data-original-text="RaIffeIsen Bank InternatIonal AG,Konto Nr 1-00 425 611, BLZ 31000, BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611" data-index="31" data-page="1"
+             data-edited="false" style="left:187px;top:1469px;width:700px;height:21px;">
+            <div class="underline" style="background-color:rgb(31,223,100);"></div>
+            <div class="ocr-tooltip">RaIffeIsen Bank InternatIonal AG,Konto Nr 1-00 425 611, BLZ 31000, BIC RZBAATWW,IBAN AT26 3100 0001 0042 5611 (Confidence: 87.75%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8715170621871948" data-text="unicredit bank austria ag,konto nr 0068-16169/00. blz 12000, bic bkauatww.iban at43 1100 0006 8161 6900"
+             data-original-text="UnICredIt Bank AustrIa AG,Konto Nr 0068-16169/00. BLZ 12000, BIC BKAUATWW.IBAN AT43 1100 0006 8161 6900" data-index="32" data-page="1"
+             data-edited="false" style="left:186px;top:1487px;width:681px;height:21px;">
+            <div class="underline" style="background-color:rgb(32,222,100);"></div>
+            <div class="ocr-tooltip">UnICredIt Bank AustrIa AG,Konto Nr 0068-16169/00. BLZ 12000, BIC BKAUATWW.IBAN AT43 1100 0006 8161 6900 (Confidence: 87.15%)</div>
+        </div>
+        
+        <div class="ocr-line" data-score="0.8870692253112793" data-text="sitz der gesellschaft wien registrert handelsgericht wien fn 117230 y. uid-nr atu 14653604 a member of starlinger group"
+             data-original-text="Sitz der Gesellschaft Wien Registrert Handelsgericht Wien FN 117230 Y. UID-Nr ATU 14653604 A member of Starlinger Group" data-index="33" data-page="1"
+             data-edited="false" style="left:187px;top:1506px;width:738px;height:21px;">
+            <div class="underline" style="background-color:rgb(28,226,100);"></div>
+            <div class="ocr-tooltip">Sitz der Gesellschaft Wien Registrert Handelsgericht Wien FN 117230 Y. UID-Nr ATU 14653604 A member of Starlinger Group (Confidence: 88.71%)</div>
+        </div>
+        
+            </div>
+            
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Text Modal -->
+            <div id="editModal" class="modal">
+                <div class="modal-content">
+                    <h3>Edit Text</h3>
+                    <textarea id="editTextArea"></textarea>
+                    <div class="modal-buttons">
+                        <button id="cancelEditBtn">Cancel</button>
+                        <button id="saveEditBtn">Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Text Modal -->
+            <div id="addTextModal" class="modal">
+                <div class="modal-content">
+                    <h3>Add New Text</h3>
+                    <textarea id="newTextArea" placeholder="Enter text..."></textarea>
+                    <div class="modal-buttons">
+                        <button id="cancelAddBtn">Cancel</button>
+                        <button id="confirmAddBtn">Add</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Modal -->
+            <div id="statsModal" class="modal">
+                <div class="modal-content">
+                    <h3>OCR Statistics</h3>
+                    <div id="statsContent">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Total Text Elements</div>
+                                <div class="stat-value" id="totalElements">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Average Confidence</div>
+                                <div class="stat-value" id="avgConfidence">0%</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Edited Elements</div>
+                                <div class="stat-value" id="editedElements">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Low Confidence (<50%)</div>
+                                <div class="stat-value" id="lowConfidence">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="closeStatsBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Modal -->
+            <div id="exportModal" class="modal">
+                <div class="modal-content">
+                    <h3>Export OCR Data</h3>
+                    <div class="export-options">
+                        <div class="export-option">
+                            <input type="radio" id="exportJson" name="exportFormat" value="json" checked>
+                            <label for="exportJson">JSON Format</label>
+                        </div>
+                        <div class="export-option">
+                            <input type="radio" id="exportText" name="exportFormat" value="text">
+                            <label for="exportText">Plain Text</label>
+                        </div>
+                        <div class="export-option">
+                            <input type="radio" id="exportCsv" name="exportFormat" value="csv">
+                            <label for="exportCsv">CSV Format</label>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="cancelExportBtn">Cancel</button>
+                        <button id="confirmExportBtn">Export</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drawing-box" id="drawingBox"></div>
+            
+            <script>
+                
+                // DOM Elements
+                const elements = {
+                    thresholdSlider: document.getElementById('thresholdSlider'),
+                    thresholdVal: document.getElementById('thresholdVal'),
+                    textFilter: document.getElementById('textFilter'),
+                    addTextBtn: document.getElementById('addTextBtn'),
+                    saveBtn: document.getElementById('saveBtn'),
+                    editModal: document.getElementById('editModal'),
+                    editTextArea: document.getElementById('editTextArea'),
+                    cancelEditBtn: document.getElementById('cancelEditBtn'),
+                    saveEditBtn: document.getElementById('saveEditBtn'),
+                    addTextModal: document.getElementById('addTextModal'),
+                    newTextArea: document.getElementById('newTextArea'),
+                    cancelAddBtn: document.getElementById('cancelAddBtn'),
+                    confirmAddBtn: document.getElementById('confirmAddBtn'),
+                    drawingBox: document.getElementById('drawingBox'),
+                    undoBtn: document.getElementById('undoBtn'),
+                    redoBtn: document.getElementById('redoBtn'),
+                    zoomInBtn: document.getElementById('zoomInBtn'),
+                    zoomOutBtn: document.getElementById('zoomOutBtn'),
+                    zoomResetBtn: document.getElementById('zoomResetBtn'),
+                    zoomLevel: document.getElementById('zoomLevel'),
+                    themeToggle: document.getElementById('themeToggle'),
+                    statsBtn: document.getElementById('statsBtn'),
+                    statsModal: document.getElementById('statsModal'),
+                    closeStatsBtn: document.getElementById('closeStatsBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
+                    exportModal: document.getElementById('exportModal'),
+                    cancelExportBtn: document.getElementById('cancelExportBtn'),
+                    confirmExportBtn: document.getElementById('confirmExportBtn'),
+                    pagesWrapper: document.getElementById('pagesWrapper'),
+                    collapseBtn: document.getElementById('collapseBtn'),
+                    collapseIcon: document.getElementById('collapseIcon'),
+                    toolbarSecondRow: document.getElementById('toolbarSecondRow'),
+                    progressBar: document.getElementById('progressBar'),
+                    progressFill: document.getElementById('progressFill'),
+                    progressText: document.getElementById('progressText'),
+                    thumbnailSidebar: document.getElementById('thumbnailSidebar')
+                };
+            
+
+                // State
+                let state = {
+                    currentEditElement: null,
+                    isDrawing: false,
+                    startX: 0, startY: 0, endX: 0, endY: 0,
+                    currentPageContainer: null,
+                    ocrData: { pages: [] },
+                    zoomLevel: 1.0,
+                    selectedElements: new Set(),
+                    undoStack: [],
+                    redoStack: [],
+                    toolbarCollapsed: false,
+                    currentPage: 0,
+                    totalPages: 0,
+                    loadedPages: new Set(),
+                    loading: false
+                };
+            
+
+                // Initialize
+                function init() {
+                    // Get total number of pages
+                    state.totalPages = document.querySelectorAll('.page-container').length;
+                    
+                    // Initialize OCR data structure
+                    document.querySelectorAll('.page-container').forEach(pageContainer => {
+                        const pageIdx = parseInt(pageContainer.id.split('-')[1]);
+                        state.ocrData.pages[pageIdx] = { rec_texts: [], rec_scores: [], rec_boxes: [], edited: [] };
+                        
+                        // Only process non-lazy pages initially
+                        if (!pageContainer.classList.contains('lazy-page')) {
+                            state.loadedPages.add(pageIdx);
+                            
+                            pageContainer.querySelectorAll('.ocr-line').forEach(line => {
+                                const index = parseInt(line.dataset.index);
+                                state.ocrData.pages[pageIdx].rec_texts[index] = line.dataset.originalText;
+                                state.ocrData.pages[pageIdx].rec_scores[index] = parseFloat(line.dataset.score);
+                                state.ocrData.pages[pageIdx].edited[index] = line.dataset.edited === "true";
+                                
+                                const rect = line.getBoundingClientRect();
+                                state.ocrData.pages[pageIdx].rec_boxes[index] = [
+                                    rect.left, rect.top, rect.right, rect.bottom
+                                ];
+                            });
+                        }
+                    });
+                    
+                    // Set initial zoom
+                    setZoom(state.zoomLevel);
+                    
+                    // Load toolbar state
+                    loadToolbarState();
+                    
+                    // Setup lazy loading
+                    setupLazyLoading();
+                    
+                    // Setup thumbnail navigation
+                    setupThumbnailNavigation();
+                    
+                    // Event Listeners
+                    setupEventListeners();
+                    
+                    updateColors();
+                }
+                
+                function setupEventListeners() {
+                    // Basic controls
+                    elements.thresholdSlider.addEventListener('input', updateColors);
+                    elements.textFilter.addEventListener('input', updateTextFilter);
+                    elements.saveEditBtn.addEventListener('click', saveEditedText);
+                    elements.cancelEditBtn.addEventListener('click', () => elements.editModal.style.display = 'none');
+                    elements.addTextBtn.addEventListener('click', startAddTextMode);
+                    elements.confirmAddBtn.addEventListener('click', confirmAddText);
+                    elements.cancelAddBtn.addEventListener('click', cancelAddText);
+                    elements.saveBtn.addEventListener('click', saveChanges);
+                    
+                    // Undo/Redo
+                    elements.undoBtn.addEventListener('click', undo);
+                    elements.redoBtn.addEventListener('click', redo);
+                    
+                    // Zoom controls
+                    elements.zoomInBtn.addEventListener('click', () => setZoom(state.zoomLevel + 0.1));
+                    elements.zoomOutBtn.addEventListener('click', () => setZoom(state.zoomLevel - 0.1));
+                    elements.zoomResetBtn.addEventListener('click', () => setZoom(1.0));
+                    
+                    // Theme toggle
+                    elements.themeToggle.addEventListener('click', toggleTheme);
+                    
+                    // Stats
+                    elements.statsBtn.addEventListener('click', showStats);
+                    elements.closeStatsBtn.addEventListener('click', () => elements.statsModal.style.display = 'none');
+                    
+                    // Export
+                    elements.exportBtn.addEventListener('click', () => elements.exportModal.style.display = 'block');
+                    elements.cancelExportBtn.addEventListener('click', () => elements.exportModal.style.display = 'none');
+                    elements.confirmExportBtn.addEventListener('click', exportData);
+                    
+                    // Toolbar collapse
+                    elements.collapseBtn.addEventListener('click', toggleToolbar);
+                    
+                    // OCR line click handlers with multi-select support
+                    document.querySelectorAll('.ocr-line').forEach(line => {
+                        line.addEventListener('click', (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                // Multi-select with Ctrl/Cmd
+                                e.stopPropagation();
+                                if (state.selectedElements.has(line)) {
+                                    state.selectedElements.delete(line);
+                                    line.classList.remove('selected');
+                                } else {
+                                    state.selectedElements.add(line);
+                                    line.classList.add('selected');
+                                }
+                            } else {
+                                // Single selection
+                                state.selectedElements.forEach(el => el.classList.remove('selected'));
+                                state.selectedElements.clear();
+                                
+                                e.stopPropagation();
+                                state.currentEditElement = line;
+                                elements.editTextArea.value = line.dataset.originalText;
+                                elements.editModal.style.display = 'block';
+                            }
+                        });
+                    });
+                    
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', handleKeyboardShortcuts);
+                    
+                    window.addEventListener('click', (e) => {
+                        if (e.target === elements.editModal) elements.editModal.style.display = 'none';
+                        if (e.target === elements.addTextModal) cancelAddText();
+                        if (e.target === elements.statsModal) elements.statsModal.style.display = 'none';
+                        if (e.target === elements.exportModal) elements.exportModal.style.display = 'none';
+                    });
+                }
+                
+                function handleKeyboardShortcuts(e) {
+                    // Ctrl/Cmd + S to save
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        saveChanges();
+                    }
+                    
+                    // Ctrl/Cmd + F to focus search
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        e.preventDefault();
+                        elements.textFilter.focus();
+                    }
+                    
+                    // Esc to close modals
+                    if (e.key === 'Escape') {
+                        elements.editModal.style.display = 'none';
+                        elements.addTextModal.style.display = 'none';
+                        elements.statsModal.style.display = 'none';
+                        elements.exportModal.style.display = 'none';
+                    }
+                    
+                    // Ctrl/Cmd + N to add new text
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                        e.preventDefault();
+                        startAddTextMode();
+                    }
+                    
+                    // Ctrl/Cmd + Z to undo
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault();
+                        undo();
+                    }
+                    
+                    // Ctrl/Cmd + Y to redo
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                        e.preventDefault();
+                        redo();
+                    }
+                }
+            
+
+                // Core Functions
+                function updateColors() {
+                    const threshold = parseFloat(elements.thresholdSlider.value);
+                    elements.thresholdVal.textContent = threshold.toFixed(2);
+                    
+                    document.querySelectorAll('.ocr-line').forEach(el => {
+                        const score = parseFloat(el.dataset.score);
+                        const isEdited = el.dataset.edited === "true";
+                        const color = isEdited ? 'rgb(245, 158, 11)' : 
+                                    (score >= threshold ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)');
+                        el.querySelector('.underline').style.backgroundColor = color;
+                    });
+                }
+                
+                function updateTextFilter() {
+                    const keyword = elements.textFilter.value.trim().toLowerCase();
+                    document.querySelectorAll('.ocr-line').forEach(el => {
+                        el.style.display = !keyword || el.dataset.text.includes(keyword) ? "block" : "none";
+                    });
+                }
+                
+                function saveEditedText() {
+                    if (!state.currentEditElement) return;
+                    
+                    const newText = elements.editTextArea.value;
+                    const safeText = newText.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                    const line = state.currentEditElement;
+                    const score = parseFloat(line.dataset.score);
+                    
+                    // Save state for undo
+                    saveState();
+                    
+                    // Update element
+                    line.dataset.originalText = newText;
+                    line.dataset.text = safeText.toLowerCase();
+                    line.dataset.edited = "true";
+                    line.querySelector('.ocr-tooltip').textContent = `${newText} (Confidence: ${(score*100).toFixed(1)}%) [Edited]`;
+                    
+                    if (!line.querySelector('.edited-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'edited-badge';
+                        badge.textContent = 'EDITED';
+                        line.appendChild(badge);
+                    }
+                    
+                    // Update data
+                    const pageIdx = parseInt(line.dataset.page);
+                    const index = parseInt(line.dataset.index);
+                    state.ocrData.pages[pageIdx].rec_texts[index] = newText;
+                    state.ocrData.pages[pageIdx].edited[index] = true;
+                    
+                    elements.editModal.style.display = 'none';
+                    state.currentEditElement = null;
+                    updateColors();
+                }
+            
+
+                // Add Text Functions
+                function startAddTextMode() {
+                    elements.addTextModal.style.display = 'none';
+                    elements.newTextArea.value = '';
+                    state.isDrawing = false;
+                    elements.drawingBox.style.display = 'none';
+                    
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.pointerEvents = 'auto';
+                        container.style.cursor = 'crosshair';
+                    });
+                    
+                    showNotification('Draw a bounding box where you want to add text', 'info');
+                }
+                
+                function confirmAddText() {
+                    const text = elements.newTextArea.value.trim();
+                    if (!text || elements.drawingBox.style.display !== 'block' || !state.currentPageContainer) return;
+                    
+                    const left = parseInt(elements.drawingBox.style.left);
+                    const top = parseInt(elements.drawingBox.style.top);
+                    const width = parseInt(elements.drawingBox.style.width);
+                    const height = parseInt(elements.drawingBox.style.height);
+                    
+                    if (width > 10 && height > 10) {
+                        const safeText = text.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                        const pageIdx = parseInt(state.currentPageContainer.id.split('-')[1]);
+                        
+                        // Save state for undo
+                        saveState();
+                        
+                        // Create new element
+                        const newLine = document.createElement('div');
+                        newLine.className = 'ocr-line';
+                        newLine.dataset.score = '1.0';
+                        newLine.dataset.text = safeText.toLowerCase();
+                        newLine.dataset.originalText = safeText;
+                        newLine.dataset.index = state.ocrData.pages[pageIdx].rec_texts.length;
+                        newLine.dataset.page = pageIdx;
+                        newLine.dataset.edited = "true";
+                        newLine.style.left = `${left}px`;
+                        newLine.style.top = `${top}px`;
+                        newLine.style.width = `${width}px`;
+                        newLine.style.height = `${height}px`;
+                        newLine.innerHTML = `
+                            <div class="underline" style="background-color:rgb(245, 158, 11);"></div>
+                            <div class="ocr-tooltip">${safeText} (Confidence: 100.0%) [Added]</div>
+                            <div class="edited-badge">ADDED</div>
+                        `;
+                        
+                        newLine.addEventListener('click', (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                // Multi-select with Ctrl/Cmd
+                                e.stopPropagation();
+                                if (state.selectedElements.has(newLine)) {
+                                    state.selectedElements.delete(newLine);
+                                    newLine.classList.remove('selected');
+                                } else {
+                                    state.selectedElements.add(newLine);
+                                    newLine.classList.add('selected');
+                                }
+                            } else {
+                                // Single selection
+                                state.selectedElements.forEach(el => el.classList.remove('selected'));
+                                state.selectedElements.clear();
+                                
+                                e.stopPropagation();
+                                state.currentEditElement = newLine;
+                                elements.editTextArea.value = newLine.dataset.originalText;
+                                elements.editModal.style.display = 'block';
+                            }
+                        });
+                        
+                        state.currentPageContainer.appendChild(newLine);
+                        
+                        // Update data
+                        state.ocrData.pages[pageIdx].rec_texts.push(text);
+                        state.ocrData.pages[pageIdx].rec_scores.push(1.0);
+                        state.ocrData.pages[pageIdx].edited.push(true);
+                        state.ocrData.pages[pageIdx].rec_boxes.push([left, top, left+width, top+height]);
+                        
+                        showNotification('Text added successfully', 'success');
+                    }
+                    
+                    cancelAddText();
+                    updateColors();
+                }
+                
+                function cancelAddText() {
+                    elements.addTextModal.style.display = 'none';
+                    elements.drawingBox.style.display = 'none';
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.pointerEvents = '';
+                        container.style.cursor = '';
+                    });
+                }
+            
+
+                // Save Functions
+                async function saveChanges() {
+                    showProgress(0, 'Saving...');
+                    
+                    try {
+                        // Simulate progress updates
+                        let progress = 0;
+                        const progressInterval = setInterval(() => {
+                            progress += 10;
+                            showProgress(progress, 'Saving...');
+                            if (progress >= 90) {
+                                clearInterval(progressInterval);
+                            }
+                        }, 200);
+                        
+                        const response = await fetch('http://localhost:2500/save_ocr_data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(state.ocrData)
+                        });
+                        
+                        clearInterval(progressInterval);
+                        showProgress(100, 'Complete!');
+                        
+                        if (response.ok) {
+                            showNotification('OCR data saved successfully!', 'success');
+                        } else {
+                            showNotification('Failed to save OCR data.', 'error');
+                        }
+                        
+                        // Hide progress bar after a delay
+                        setTimeout(() => {
+                            hideProgress();
+                        }, 1000);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        hideProgress();
+                        showNotification('Error saving data. See console for details.', 'error');
+                    }
+                }
+            
+
+                // Progress bar functions
+                function showProgress(percent, text) {
+                    elements.progressBar.style.display = 'block';
+                    elements.progressFill.style.width = `${percent}%`;
+                    elements.progressText.textContent = text;
+                }
+                
+                function hideProgress() {
+                    elements.progressBar.style.display = 'none';
+                }
+            
+
+                // Lazy loading functions
+                function setupLazyLoading() {
+                    // Create an IntersectionObserver to detect when pages come into view
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting && !entry.target.classList.contains('loaded')) {
+                                loadPage(entry.target);
+                            }
+                        });
+                    }, {
+                        root: elements.pagesWrapper,
+                        rootMargin: '200px', // Load pages when they're within 200px of the viewport
+                        threshold: 0.1
+                    });
+                    
+                    // Observe all lazy pages
+                    document.querySelectorAll('.lazy-page').forEach(page => {
+                        observer.observe(page);
+                    });
+                }
+                
+                function loadPage(pageElement) {
+                    const pageIdx = parseInt(pageElement.dataset.pageIndex);
+                    
+                    // Show loading state
+                    const placeholder = pageElement.querySelector('.page-placeholder');
+                    if (placeholder) {
+                        placeholder.textContent = `Loading Page ${pageIdx + 1}...`;
+                    }
+                    
+                    // Simulate loading delay for demonstration
+                    setTimeout(() => {
+                        // In a real implementation, you would fetch the page data here
+                        // For this example, we'll just show the content
+                        const content = pageElement.querySelector('.page-content');
+                        if (content) {
+                            content.style.display = 'block';
+                            pageElement.classList.add('loaded');
+                            
+                            // Hide placeholder
+                            if (placeholder) {
+                                placeholder.style.display = 'none';
+                            }
+                            
+                            // Load the image
+                            const img = content.querySelector('.ocr-image');
+                            if (img && img.dataset.src) {
+                                img.src = img.dataset.src;
+                            }
+                            
+                            // Process OCR lines for this page
+                            content.querySelectorAll('.ocr-line').forEach(line => {
+                                const index = parseInt(line.dataset.index);
+                                state.ocrData.pages[pageIdx].rec_texts[index] = line.dataset.originalText;
+                                state.ocrData.pages[pageIdx].rec_scores[index] = parseFloat(line.dataset.score);
+                                state.ocrData.pages[pageIdx].edited[index] = line.dataset.edited === "true";
+                                
+                                const rect = line.getBoundingClientRect();
+                                state.ocrData.pages[pageIdx].rec_boxes[index] = [
+                                    rect.left, rect.top, rect.right, rect.bottom
+                                ];
+                            });
+                            
+                            // Mark page as loaded
+                            state.loadedPages.add(pageIdx);
+                            
+                            // Update active thumbnail
+                            updateActiveThumbnail(pageIdx);
+                        }
+                    }, 500); // Simulate loading time
+                }
+            
+
+                // Thumbnail navigation functions
+                function setupThumbnailNavigation() {
+                    // Add click event to thumbnails
+                    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+                        thumbnail.addEventListener('click', () => {
+                            const pageIdx = parseInt(thumbnail.dataset.page);
+                            scrollToPage(pageIdx);
+                        });
+                    });
+                    
+                    // Set initial active thumbnail
+                    updateActiveThumbnail(0);
+                }
+                
+                function scrollToPage(pageIdx) {
+                    const pageElement = document.getElementById(`page-${pageIdx}`);
+                    if (pageElement) {
+                        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        state.currentPage = pageIdx;
+                        updateActiveThumbnail(pageIdx);
+                        
+                        // If the page is lazy and not loaded, load it now
+                        if (pageElement.classList.contains('lazy-page') && !pageElement.classList.contains('loaded')) {
+                            loadPage(pageElement);
+                        }
+                    }
+                }
+                
+                function updateActiveThumbnail(pageIdx) {
+                    // Remove active class from all thumbnails
+                    document.querySelectorAll('.thumbnail').forEach(thumb => {
+                        thumb.classList.remove('active');
+                    });
+                    
+                    // Add active class to current thumbnail
+                    const activeThumb = document.querySelector(`.thumbnail[data-page="${pageIdx}"]`);
+                    if (activeThumb) {
+                        activeThumb.classList.add('active');
+                    }
+                }
+            
+
+                // Undo/Redo functionality
+                function saveState() {
+                    state.undoStack.push(JSON.stringify(state.ocrData));
+                    state.redoStack = []; // Clear redo stack when new action is performed
+                    updateUndoRedoButtons();
+                }
+                
+                function undo() {
+                    if (state.undoStack.length === 0) return;
+                    
+                    const currentState = JSON.stringify(state.ocrData);
+                    state.redoStack.push(currentState);
+                    
+                    const previousState = state.undoStack.pop();
+                    state.ocrData = JSON.parse(previousState);
+                    
+                    updateUndoRedoButtons();
+                    refreshUI();
+                    showNotification('Undo successful', 'info');
+                }
+                
+                function redo() {
+                    if (state.redoStack.length === 0) return;
+                    
+                    const currentState = JSON.stringify(state.ocrData);
+                    state.undoStack.push(currentState);
+                    
+                    const nextState = state.redoStack.pop();
+                    state.ocrData = JSON.parse(nextState);
+                    
+                    updateUndoRedoButtons();
+                    refreshUI();
+                    showNotification('Redo successful', 'info');
+                }
+                
+                function updateUndoRedoButtons() {
+                    elements.undoBtn.disabled = state.undoStack.length === 0;
+                    elements.redoBtn.disabled = state.redoStack.length === 0;
+                }
+                
+                function refreshUI() {
+                    // This would refresh the entire UI based on the current state
+                    // For simplicity, we'll just reload the page
+                    location.reload();
+                }
+            
+
+                // Zoom functionality
+                function setZoom(level) {
+                    level = Math.max(0.3, Math.min(2.0, level)); // Limit zoom range
+                    state.zoomLevel = level;
+                    
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.transform = `scale(${level})`;
+                    });
+                    
+                    elements.zoomLevel.textContent = `${Math.round(level * 100)}%`;
+                }
+            
+
+                // Theme toggle
+                function toggleTheme() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                }
+                
+                // Load saved theme
+                function loadTheme() {
+                    const savedTheme = localStorage.getItem('theme') || 'dark';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                }
+            
+
+                // Toolbar collapse functionality
+                function toggleToolbar() {
+                    state.toolbarCollapsed = !state.toolbarCollapsed;
+                    
+                    if (state.toolbarCollapsed) {
+                        elements.toolbarSecondRow.classList.add('collapsed');
+                        elements.collapseIcon.innerHTML = `
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        `;
+                    } else {
+                        elements.toolbarSecondRow.classList.remove('collapsed');
+                        elements.collapseIcon.innerHTML = `
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        `;
+                    }
+                    
+                    // Save state to localStorage
+                    localStorage.setItem('toolbarCollapsed', state.toolbarCollapsed);
+                }
+                
+                function loadToolbarState() {
+                    const savedState = localStorage.getItem('toolbarCollapsed');
+                    if (savedState !== null) {
+                        state.toolbarCollapsed = savedState === 'true';
+                        
+                        if (state.toolbarCollapsed) {
+                            elements.toolbarSecondRow.classList.add('collapsed');
+                            elements.collapseIcon.innerHTML = `
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            `;
+                        }
+                    }
+                }
+            
+
+                // Statistics
+                function showStats() {
+                    let totalElements = 0;
+                    let totalConfidence = 0;
+                    let editedElements = 0;
+                    let lowConfidence = 0;
+                    
+                    state.ocrData.pages.forEach(page => {
+                        totalElements += page.rec_texts.length;
+                        page.rec_scores.forEach(score => {
+                            totalConfidence += score;
+                            if (score < 0.5) lowConfidence++;
+                        });
+                        editedElements += page.edited.filter(edited => edited).length;
+                    });
+                    
+                    const avgConfidence = totalElements > 0 ? (totalConfidence / totalElements * 100).toFixed(1) : 0;
+                    
+                    document.getElementById('totalElements').textContent = totalElements;
+                    document.getElementById('avgConfidence').textContent = `${avgConfidence}%`;
+                    document.getElementById('editedElements').textContent = editedElements;
+                    document.getElementById('lowConfidence').textContent = lowConfidence;
+                    
+                    elements.statsModal.style.display = 'block';
+                }
+            
+
+                // Export functionality
+                function exportData() {
+                    const format = document.querySelector('input[name="exportFormat"]:checked').value;
+                    let content = '';
+                    let filename = '';
+                    
+                    switch(format) {
+                        case 'json':
+                            content = JSON.stringify(state.ocrData, null, 2);
+                            filename = 'ocr_data.json';
+                            break;
+                        case 'text':
+                            content = state.ocrData.pages.map(page => 
+                                page.rec_texts.join('\n')
+                            ).join('\n\n--- Page Break ---\n\n');
+                            filename = 'ocr_text.txt';
+                            break;
+                        case 'csv':
+                            content = 'Page,Index,Text,Confidence,Edited\n';
+                            state.ocrData.pages.forEach((page, pageIndex) => {
+                                page.rec_texts.forEach((text, index) => {
+                                    content += `${pageIndex + 1},${index + 1},"${text.replace(/"/g, '""')}",${(page.rec_scores[index] * 100).toFixed(1)}%,${page.edited[index] ? 'Yes' : 'No'}\n`;
+                                });
+                            });
+                            filename = 'ocr_data.csv';
+                            break;
+                    }
+                    
+                    downloadFile(content, filename);
+                    elements.exportModal.style.display = 'none';
+                    showNotification(`Data exported as ${format.toUpperCase()}`, 'success');
+                }
+                
+                function downloadFile(content, filename) {
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            
+
+                // Modern notification system instead of alerts
+                function showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = 'notification';
+                    notification.style.position = 'fixed';
+                    notification.style.bottom = '20px';
+                    notification.style.right = '20px';
+                    notification.style.padding = '12px 20px';
+                    notification.style.borderRadius = '8px';
+                    notification.style.zIndex = '3000';
+                    notification.style.fontWeight = '500';
+                    notification.style.maxWidth = '300px';
+                    notification.style.animation = 'slideInRight 0.3s, fadeOut 0.5s 2.5s forwards';
+                    
+                    // Set color based on type
+                    if (type === 'success') {
+                        notification.style.backgroundColor = 'rgb(16, 185, 129)';
+                        notification.style.color = 'white';
+                    } else if (type === 'error') {
+                        notification.style.backgroundColor = 'rgb(239, 68, 68)';
+                        notification.style.color = 'white';
+                    } else {
+                        notification.style.backgroundColor = 'var(--bg-secondary)';
+                        notification.style.color = 'var(--text-primary)';
+                        notification.style.border = '1px solid var(--border)';
+                    }
+                    
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    
+                    // Remove notification after animation
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+                }
+            
+
+                // Drawing handlers
+                function setupDrawingHandlers() {
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.addEventListener('mousedown', (e) => {
+                            if (elements.addTextModal.style.display === 'none' && 
+                                document.querySelector('.page-container').style.cursor === 'crosshair') {
+                                e.preventDefault();
+                                state.isDrawing = true;
+                                state.startX = e.clientX - container.getBoundingClientRect().left;
+                                state.startY = e.clientY - container.getBoundingClientRect().top;
+                                
+                                elements.drawingBox.style.left = `${state.startX}px`;
+                                elements.drawingBox.style.top = `${state.startY}px`;
+                                elements.drawingBox.style.width = '0px';
+                                elements.drawingBox.style.height = '0px';
+                                elements.drawingBox.style.display = 'block';
+                                state.currentPageContainer = container;
+                            }
+                        });
+                        
+                        container.addEventListener('mousemove', (e) => {
+                            if (!state.isDrawing) return;
+                            const currentX = e.clientX - container.getBoundingClientRect().left;
+                            const currentY = e.clientY - container.getBoundingClientRect().top;
+                            
+                            elements.drawingBox.style.left = `${Math.min(state.startX, currentX)}px`;
+                            elements.drawingBox.style.top = `${Math.min(state.startY, currentY)}px`;
+                            elements.drawingBox.style.width = `${Math.abs(currentX - state.startX)}px`;
+                            elements.drawingBox.style.height = `${Math.abs(currentY - state.startY)}px`;
+                        });
+                        
+                        container.addEventListener('mouseup', (e) => {
+                            if (!state.isDrawing) return;
+                            state.isDrawing = false;
+                            state.endX = e.clientX - state.currentPageContainer.getBoundingClientRect().left;
+                            state.endY = e.clientY - state.currentPageContainer.getBoundingClientRect().top;
+                            
+                            if (Math.abs(state.endX - state.startX) > 10 && Math.abs(state.endY - state.startY) > 10) {
+                                elements.addTextModal.style.display = 'block';
+                            } else {
+                                elements.drawingBox.style.display = 'none';
+                                showNotification('Please draw a larger box', 'info');
+                            }
+                        });
+                    });
+                }
+            
+
+                // Add CSS for notification animations
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Start the application
+                loadTheme();
+                init();
+                setupDrawingHandlers();
+            
+            </script>
+        </body>
+        </html>
