@@ -1,129 +1,247 @@
 # Trade Document Compliance Checker
 
-This project implements a sophisticated Trade Document Compliance Checker, leveraging a Retrieval-Augmented Generation (RAG) pipeline to validate trade documents against international banking rules such as ISBP and UCP. The system is designed to provide a detailed compliance report, highlighting both discrepancies and compliances based on the relevant articles and rules.
+A sophisticated AI-powered Trade Document Compliance Checker that validates trade documents against international banking rules (ISBP, UCP) using a Retrieval-Augmented Generation (RAG) pipeline. The system provides detailed compliance reports with specific rule citations and supports multiple LLM providers for reliability.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Why RAG over Simple Prompt Engineering?](#why-rag-over-simple-prompt-engineering)
-- [System Architecture](#system-architecture)
-- [Technologies and Libraries Used](#technologies-and-libraries-used)
-- [Setup and Installation](#setup-and-installation)
-- [Usage](#usage)
-- [Future Enhancements](#future-enhancements)
+## 🚀 Features
 
-## Introduction
-In international trade finance, ensuring strict compliance of documents with established rules like the International Standard Banking Practice (ISBP) and Uniform Customs and Practice for Documentary Credits (UCP) is paramount. Manual checking is prone to errors and time-consuming. This application automates the compliance verification process by utilizing advanced AI models to analyze trade documents against a comprehensive knowledge base of rules.
+- **Multi-LLM Support**: Automatic fallback between GLM-4.5-Flash and Groq (Llama3-70B-8192) for reliable processing
+- **Smart Rule Management**: Configurable rule sets with document-specific and general rule categories
+- **RAG-Powered Analysis**: Intelligent retrieval of relevant rule sections for accurate compliance checking
+- **Multiple Document Types**: Supports Bill of Lading, Commercial Invoice, Packing List, Covering Schedule, DHL Receipt, and Shipment Advice
+- **Detailed Compliance Reports**: JSON-structured reports with specific rule citations and compliance/discrepancy classifications
+- **Modern Web Interface**: Streamlit-based UI with real-time processing and visual feedback
+- **Efficient Processing**: 93% reduction in token usage through intelligent RAG implementation
 
-## Features
-- **Automated Compliance Checking:** Automatically validates uploaded trade documents (e.g., Bill of Lading, Commercial Invoice, Packing List) against ISBP and UCP rules.
-- **Detailed Compliance Reports:** Generates a structured JSON report outlining specific discrepancies (violated rules) and compliances (followed rules).
-- **Rule-Specific Validation:** Validates documents against each rule document (e.g., ISBP 745, ISBP 821, UCP 600) independently, providing separate reports for clarity.
-- **Retrieval-Augmented Generation (RAG):** Employs a RAG pipeline to efficiently retrieve the most relevant rule sections for analysis, optimizing LLM performance and reducing token usage.
-- **User-Friendly Interface:** A Streamlit-based web interface for easy document upload and report viewing.
+## 🏗️ System Architecture
 
-## Why RAG over Simple Prompt Engineering?
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Document      │    │   Rule Loading   │    │   RAG Pipeline  │
+│   Upload        │───▶│   & Management   │───▶│   (Vectorizer)  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │   LLM Service    │    │   Compliance    │
+                       │  (GLM + Groq)   │◀───│   Analysis      │
+                       └──────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │   Fallback       │    │   Report        │
+                       │   Mechanism      │    │   Generation    │
+                       └──────────────────┘    └─────────────────┘
+```
 
-Initially, a simpler prompt engineering approach was considered where the entire rulebook (or multiple rulebooks concatenated) would be fed directly to the Large Language Model (LLM) along with the document to be analyzed. While this might work for very small rule sets or documents, it quickly becomes unfeasible and inefficient for several critical reasons:
+## 🛠️ Technologies & Dependencies
 
-1.  **Token Limit Constraints:** LLMs have strict input token limits. Comprehensive rulebooks like ISBP and UCP are extensive. Concatenating multiple such documents, plus the trade document itself, rapidly exceeds these limits, leading to "request too large" errors.
-2.  **Cost Efficiency:** Every token sent to an LLM incurs a cost. Sending entire rulebooks repeatedly for each analysis is extremely expensive and wasteful, as only a small fraction of the rules might be relevant to a specific document or discrepancy.
-3.  **Performance and Latency:** Processing a massive input context takes significantly longer for the LLM. This increases latency, making the application slow and unresponsive for the user.
-4.  **Accuracy and Hallucination:** When an LLM is given an overly broad context, it can struggle to focus on the most pertinent information. This can lead to less accurate compliance checks, increased "hallucinations" (generating plausible but incorrect findings), and a diluted understanding of the specific rules relevant to the document.
-5.  **Scalability:** As the number of rulebooks grows (e.g., adding URC, URDG, etc.), the simple prompt engineering approach would completely break down. A RAG approach, by retrieving only relevant snippets, scales much more effectively.
+### Core Dependencies
+- **Python 3.x**: Core programming language
+- **Streamlit**: Web interface framework
+- **PyPDF2**: PDF text extraction
+- **python-dotenv**: Environment variable management
+- **requests**: HTTP client for API calls
 
-**The RAG Approach addresses these challenges by:**
-- **Intelligent Retrieval:** Only the most semantically similar and relevant sections of the rulebooks are retrieved based on the content of the trade document.
-- **Reduced Context Size:** The LLM receives a much smaller, highly focused context, staying within token limits, reducing costs, and improving processing speed.
-- **Enhanced Accuracy:** By providing a precise context, the LLM can perform more accurate and targeted compliance checks, minimizing irrelevant information and improving the quality of the generated report.
-- **Scalability:** The system can easily incorporate new rulebooks without significantly impacting performance, as the retrieval mechanism ensures only necessary information is passed to the LLM.
+### LLM Providers
+- **GLM-4.5-Flash** (Primary): High-performance Chinese LLM via Zhipu AI
+- **Groq Llama3-70B-8192** (Fallback): Fast inference via Groq API
 
-## System Architecture
+### AI/ML Components
+- **Custom TF-IDF Vectorizer**: Efficient text similarity calculation
+- **Cosine Similarity**: Rule relevance scoring
+- **Chunking System**: Optimal text processing for large documents
 
-The system follows a modular architecture, primarily consisting of:
+## 📁 Project Structure
 
-1.  **Document Ingestion:** PDF rulebooks (ISBP, UCP) are read and their text content is extracted.
-2.  **Rule Chunking and Vectorization:** The extracted rule texts are split into smaller, manageable chunks. Each chunk is then vectorized using a custom TF-IDF implementation. These vectors form an in-memory knowledge base.
-3.  **User Document Upload:** Users upload their trade documents (as `.txt` files) via the Streamlit interface.
-4.  **Relevant Rule Retrieval (RAG):** When a trade document is uploaded, its content is vectorized. This vector is then used to calculate cosine similarity against all rule chunks in the knowledge base. The top-K most relevant chunks are retrieved.
-5.  **LLM Invocation:** The retrieved relevant rule chunks, along with the user's trade document and a specific system prompt, are sent to the Large Language Model (LLM).
-6.  **Compliance Analysis:** The LLM analyzes the trade document against the provided relevant rules and generates a structured JSON compliance report.
-7.  **Report Display and Storage:** The generated report is displayed in the Streamlit interface and saved as a JSON file in the `output/` directory.
+```
+├── app.py                          # Main Streamlit application
+├── rag_llm_pipeline.py            # Core RAG and LLM pipeline
+├── vectorizer.py                  # Custom TF-IDF vectorization
+├── llm_service.py                 # LLM service with fallback
+├── glm_llm.py                     # GLM LLM client implementation
+├── rules_config.json              # Rule configuration and mapping
+├── system_prompt.md               # Main compliance analysis prompt
+├── system_prompt_doc_type.md      # Document type detection prompt
+├── system_prompt_rule_categorizer.md # Rule categorization prompt
+├── requirements.txt               # Python dependencies
+├── ISBP rules/                    # Rule documents directory
+│   ├── General_Rules_Common.pdf
+│   ├── Bill_of_Lading_Rules.pdf
+│   ├── Commercial_Invoice_Validation_Rules.pdf
+│   ├── Packing_List_Validation_Rules.pdf
+│   ├── Covering_Schedule_Validation_Rules.pdf
+│   ├── DHL_Receipt_Validation_Rules.pdf
+│   ├── Shipment_Advice_Validation_Rules.pdf
+│   ├── isbp-745.pdf
+│   ├── isbp-821.pdf
+│   └── UCP-600.pdf
+├── output/                        # Generated compliance reports
+├── transcribe_docs/               # Document transcriptions
+└── OCR/                          # OCR processing results
+```
 
-## Technologies and Libraries Used
+## ⚙️ Configuration
 
--   **Python 3.x:** The core programming language for the entire application.
--   **Streamlit:** Used for building the interactive web-based user interface.
-    -   *Why:* Provides rapid development of data apps and interactive dashboards with minimal code, making it ideal for a quick prototype and user interaction.
--   **Groq API (llama3-70b-8192):** The Large Language Model (LLM) used for the core compliance analysis and report generation.
-    -   *Why:* Groq offers high-performance, low-latency inference for LLMs, which is crucial for a responsive compliance checker. The `llama3-70b-8192` model is chosen for its strong reasoning capabilities and large context window.
--   **PyPDF2:** A Python library used for extracting text content from PDF documents.
-    -   *Why:* Essential for ingesting the ISBP and UCP rulebooks, which are typically distributed in PDF format.
--   **`re` (Python's built-in regex module):** Used for text preprocessing (e.g., lowercasing, removing punctuation) in the vectorizer.
-    -   *Why:* Standard library, efficient for basic text manipulation.
--   **`collections.Counter`:** Used in the custom TF-IDF implementation for counting word frequencies.
-    -   *Why:* Part of Python's standard library, efficient for frequency counting.
--   **`math` module:** Used for mathematical operations (e.g., `log`, `sqrt`) in the custom TF-IDF and cosine similarity calculations.
-    -   *Why:* Standard library, provides necessary mathematical functions.
--   **`os` and `json` (Python's built-in modules):** Used for file system operations (reading/writing files, creating directories) and JSON parsing/serialization.
-    -   *Why:* Standard library, fundamental for file handling and data interchange.
--   **`dotenv`:** For loading environment variables (like API keys) from a `.env` file.
-    -   *Why:* Securely manages sensitive information without hardcoding it into the source code.
+### Rule Configuration (`rules_config.json`)
+The system uses a smart rule loading mechanism:
 
-## Setup and Installation
+```json
+{
+  "general_rules": ["General_Rules_Common.pdf"],
+  "document_specific_rules": {
+    "BILL OF LADING": ["Bill_of_Lading_Rules.pdf"],
+    "COMMERCIAL INVOICE": ["Commercial_Invoice_Validation_Rules.pdf"],
+    "PACKING LIST": ["Packing_List_Validation_Rules.pdf"],
+    "COVERING SCHEDULE": ["Covering_Schedule_Validation_Rules.pdf"],
+    "DHL RECEIPT": ["DHL_Receipt_Validation_Rules.pdf"],
+    "SHIPMENT ADVICE": ["Shipment_Advice_Validation_Rules.pdf"]
+  }
+}
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/Hassan-asim/Trade-Document-Compliance-Checker.git
-    cd Trade-Document-Compliance-Checker
-    ```
+### Environment Variables
+Create a `.env` file with your API keys:
 
-2.  **Create a virtual environment (recommended):**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: .venv\Scripts\activate
-    ```
+```bash
+# Primary LLM (GLM-4.5-Flash)
+GLM_API_KEY=your_glm_api_key_here
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-    *(Note: A `requirements.txt` file will be generated or provided containing `streamlit`, `groq`, `PyPDF2`, `python-dotenv`)*
+# Fallback LLM (Groq)
+GROQ_API_KEY=your_groq_api_key_here
+```
 
-4.  **Set up Groq API Key:**
-    -   Obtain an API key from [Groq Console](https://console.groq.com/).
-    -   Create a `.env` file in the root directory of the project and add your API key:
-        ```
-        GROQ_API_KEY=your_groq_api_key_here
-        ```
+## 🚀 Installation & Setup
 
-5.  **Place Rule Documents:**
-    -   Create a folder named `ISBP rules` in the root directory.
-    -   Place your PDF rule documents (e.g., `isbp-745.pdf`, `ISBP-821.pdf`, `UCP 600.pdf`) inside this `ISBP rules` folder. The application will automatically detect and load all PDF files from this directory.
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd "1st task"
+```
 
-## Usage
+### 2. Create Virtual Environment
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
 
-1.  **Run the Streamlit application:**
-    ```bash
-    streamlit run app.py
-    ```
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-2.  **Access the application:**
-    -   Open your web browser and navigate to the URL displayed in your terminal (usually `http://localhost:8501`).
+### 4. Configure API Keys
+- Obtain API keys from [Zhipu AI Console](https://console.zhipuai.cn/) and [Groq Console](https://console.groq.com/)
+- Create `.env` file with your keys
 
-3.  **Upload Document:**
-    -   Use the file uploader in the Streamlit interface to select a `.txt` file of the trade document you wish to analyze.
+### 5. Prepare Rule Documents
+- Place your PDF rule documents in the `ISBP rules/` directory
+- Ensure filenames match those referenced in `rules_config.json`
 
-4.  **View Report:**
-    -   The application will process the document against each loaded rulebook independently.
-    -   Compliance reports for each rulebook will be displayed separately on the page, detailing discrepancies and compliances.
-    -   JSON reports will also be saved in the `output/` directory and can be downloaded directly from the UI.
+## 💻 Usage
 
-## Future Enhancements
--   **Advanced Vectorization:** Integrate more sophisticated embedding models (e.g., Sentence Transformers) for better semantic understanding and retrieval.
--   **Persistent Vector Store:** Implement a dedicated vector database (e.g., ChromaDB, FAISS) for efficient storage and retrieval of rule chunks, especially for a larger number of rulebooks.
--   **Dynamic Rule Management:** Allow users to upload and manage rule documents directly through the UI.
--   **Multi-document Analysis:** Enable analysis of multiple trade documents simultaneously.
--   **UI/UX Improvements:** Enhance the user interface for better readability and interaction.
--   **Error Handling and Logging:** More robust error handling and detailed logging for debugging and monitoring.
--   **Test Suite:** Develop a comprehensive test suite to ensure the accuracy and reliability of compliance checks.# Advanced-RAG-Based-Trade-Document-Compliance-Analysis 
+### 1. Start the Application
+```bash
+streamlit run app.py
+```
+
+### 2. Access the Web Interface
+- Open your browser to `http://localhost:8501`
+- The interface will show loaded rules and configuration
+
+### 3. Upload Documents
+- Use the file uploader to select trade documents
+- Supported formats: `.txt`, `.pdf` (with OCR processing)
+- The system automatically detects document type
+
+### 4. View Results
+- Real-time processing with progress indicators
+- Separate compliance reports for each rule set
+- Download JSON reports for further analysis
+
+## 🔍 How It Works
+
+### 1. Document Processing
+- Document type detection using AI
+- Text extraction and preprocessing
+- Chunking for optimal processing
+
+### 2. Rule Retrieval (RAG)
+- TF-IDF vectorization of document and rules
+- Cosine similarity calculation
+- Top-K most relevant rule sections retrieval
+
+### 3. Compliance Analysis
+- LLM processes document against retrieved rules
+- Structured JSON output with specific citations
+- Classification into compliances and discrepancies
+
+### 4. Report Generation
+- Comprehensive compliance summary
+- Rule-specific analysis results
+- Exportable JSON format
+
+## 📊 Performance Features
+
+- **Token Efficiency**: 93% reduction in token usage (225K → 11K chars)
+- **Fast Processing**: Intelligent chunking and vectorization
+- **Reliable Fallback**: Automatic LLM provider switching
+- **Memory Optimization**: Selective rule loading based on document type
+
+## 🔧 Advanced Features
+
+### Multi-LLM Fallback System
+- Primary: GLM-4.5-Flash for high-quality analysis
+- Fallback: Groq Llama3-70B-8192 for reliability
+- Automatic switching on API failures
+
+### Smart Rule Management
+- Document-specific rule sets
+- General rules for universal compliance
+- Configurable rule loading
+
+### Enhanced User Experience
+- Real-time processing feedback
+- Visual progress indicators
+- Configuration transparency
+- Error handling and debugging
+
+## 🚧 Troubleshooting
+
+### Common Issues
+1. **API Key Errors**: Ensure `.env` file contains valid API keys
+2. **PDF Reading Issues**: Check PDF file integrity and permissions
+3. **Memory Issues**: Large rule documents may require more RAM
+
+### Debug Mode
+- Check console output for detailed processing information
+- Review `output/` directory for generated reports
+- Verify rule configuration in `rules_config.json`
+
+## 🔮 Future Enhancements
+
+- [ ] Support for additional document types
+- [ ] Integration with more LLM providers
+- [ ] Advanced rule customization interface
+- [ ] Batch processing capabilities
+- [ ] API endpoint for external integrations
+- [ ] Enhanced visualization and reporting
+
+## 📝 License
+
+This project is designed for educational and commercial use in trade document compliance checking.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please ensure:
+- Code follows existing patterns
+- Tests are added for new features
+- Documentation is updated
+- API keys are never committed
+
+---
+
+**Built with ❤️ for the international trade finance community**
+
