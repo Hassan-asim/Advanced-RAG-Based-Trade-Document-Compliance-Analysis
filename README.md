@@ -22,15 +22,15 @@ A sophisticated AI-powered Trade Document Compliance Checker that validates trad
                                 │                        │
                                 ▼                        ▼
                        ┌──────────────────┐    ┌─────────────────┐
-                       │   LLM Service    │    │   Compliance    │
-                       │  (GLM + Groq)   │◀───│   Analysis      │
-                       └──────────────────┘    └─────────────────┘
-                                │                        │
-                                ▼                        ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │   Fallback       │    │   Report        │
-                       │   Mechanism      │    │   Generation    │
-                       └──────────────────┘    └─────────────────┘
+           ____________│   LLM Service    │    │   Compliance    │
+         |             │  (GLM + Groq)   │◀───│   Analysis      │
+         |             └──────────────────┘    └─────────────────┘
+         |                      │                        
+         ▼                      ▼                        
+ ┌──────────────────┐     ┌─────────────────┐
+ │   Fallback       │     │   Report        │
+ │   Mechanism      │---▶│   Generation    │
+ └──────────────────┘     └─────────────────┘
 ```
 
 ## 🛠️ Technologies & Dependencies
@@ -228,20 +228,4 @@ streamlit run app.py
 - [ ] Batch processing capabilities
 - [ ] API endpoint for external integrations
 - [ ] Enhanced visualization and reporting
-
-## 📝 License
-
-This project is designed for educational and commercial use in trade document compliance checking.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please ensure:
-- Code follows existing patterns
-- Tests are added for new features
-- Documentation is updated
-- API keys are never committed
-
----
-
-**Built with ❤️ for the international trade finance community**
 
