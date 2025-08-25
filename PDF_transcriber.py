@@ -93,18 +93,29 @@ class PDFTranscriber:
         text_chunks = self.text_splitter.split_text(text_content)
         transcribed_parts = []
 
+        # Enhanced system prompt for better document formatting
         system_prompt = (
-            "You are an expert transcriber. Your task is to accurately transcribe the provided document content "
-            "into a proper formatted text version. Preserve all original line breaks, and different section text, paragraph structures, and general "
-            "layout as much as possible to reflect the visual placement of text. Do not add any summaries, "
-            "introductions, or conclusions. Just provide the raw transcribed text. This is a part of a larger document."
+            "You are an expert document transcriber specializing in trade documents. Your task is to accurately transcribe "
+            "document content while preserving the proper document structure and formatting.\n\n"
+            "IMPORTANT FORMATTING RULES:\n"
+            "1. Preserve title-value pairs where titles are above and values are below\n"
+            "2. Maintain proper alignment and spacing between fields\n"
+            "3. Keep the document structure with clear sections and headers\n"
+            "4. Format addresses properly with line breaks and proper spacing\n"
+            "5. Preserve numerical values, dates, reference codes, and amounts exactly\n"
+            "6. Maintain the visual hierarchy and layout of the original document\n"
+            "7. Preserve table structures and column alignments where possible\n"
+            "8. Keep proper spacing between different document sections\n"
+            "9. Do not add any summaries, interpretations, or conclusions\n"
+            "10. Just provide the raw transcribed document text with proper formatting\n\n"
+            "This document should maintain its original structure and formatting as much as possible."
         )
 
         for i, chunk in enumerate(text_chunks):
             print(f"  Processing chunk {i+1}/{len(text_chunks)} for {os.path.basename(pdf_path)}...")
             messages = [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"""Transcribe the following document content:\n\n{chunk}"""}
+                {"role": "user", "content": f"""Transcribe the following document content with proper formatting:\n\n{chunk}"""}
             ]
 
             try:
@@ -125,8 +136,14 @@ class PDFTranscriber:
             final_transcribed_text = "".join(transcribed_parts)
             output_filename = os.path.basename(pdf_path).replace(".pdf", ".txt")
             output_path = os.path.join(self.output_transcribe_dir, output_filename)
+            
+            # Add a header based on document type
+            doc_name = os.path.basename(pdf_path).replace(".pdf", "").upper()
+            doc_header = f"=== {doc_name} TRANSCRIPTION ===\n\n"
+            final_text_with_header = doc_header + final_transcribed_text
+            
             with open(output_path, "w", encoding="utf-8") as f:
-                f.write(final_transcribed_text)
+                f.write(final_text_with_header)
             print(f"Transcribed text saved to {output_path}")
         else:
             print(f"Failed to transcribe {pdf_path} (no parts transcribed).")

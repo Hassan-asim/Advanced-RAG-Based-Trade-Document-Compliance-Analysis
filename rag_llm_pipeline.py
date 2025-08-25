@@ -132,19 +132,466 @@ class RAGLLMPipeline:
     @staticmethod
     def _heuristic_detect_document_type(document_content: str) -> str | None:
         content_lower = document_content.lower()
-        # Check for strong indicators first
-        if re.search(r"\bbill of lading\b", content_lower):
-            return "BILL OF LADING"
-        if re.search(r"\bpacking\s+list\b", content_lower):
-            return "PACKING LIST"
-        if re.search(r"\bcommercial\s+invoice\b", content_lower):
-            return "COMMERCIAL INVOICE"
-        if re.search(r"\bshipment\s+advice\b", content_lower):
-            return "SHIPMENT ADVICE"
-        if re.search(r"\bcovering\s+schedule\b", content_lower):
-            return "COVERING SCHEDULE"
-        if re.search(r"\bdhl\b", content_lower) and re.search(r"\breceipt\b|\bwaybill\b", content_lower):
-            return "DHL RECEIPT"
+        
+        # Enhanced DHL RECEIPT detection with OCR error tolerance
+        dhl_indicators = [
+            r"\bdhl\b",  # Exact DHL
+            r"\bd\s*h\s*l\b",  # D H L with spaces
+            r"\bd\s*[h]\s*l\b",  # D H L with OCR errors
+            r"\bwaybill\b",  # Waybill keyword
+            r"\bway\s*bill\b",  # Way bill with space
+            r"\btracking\s*number\b",  # Tracking number
+            r"\btrack\s*no\b",  # Track no
+            r"\bairway\s*bill\b",  # Airway bill
+            r"\bair\s*way\s*bill\b",  # Air way bill
+            r"\bexpress\s*service\b",  # Express service
+            r"\bdelivery\s*receipt\b",  # Delivery receipt
+            r"\bdelivery\s*note\b",  # Delivery note
+            r"\bparcel\s*receipt\b",  # Parcel receipt
+            r"\bparcel\s*note\b",  # Parcel note
+            r"\bshipping\s*label\b",  # Shipping label
+            r"\bship\s*label\b",  # Ship label
+            r"\bconsignment\s*note\b",  # Consignment note
+            r"\bconsign\s*note\b",  # Consign note
+            r"\bdispatch\s*note\b",  # Dispatch note
+            r"\bdispatch\s*advice\b",  # Dispatch advice
+        ]
+        
+        # Check for DHL RECEIPT with multiple indicators
+        dhl_score = 0
+        for pattern in dhl_indicators:
+            if re.search(pattern, content_lower):
+                dhl_score += 1
+        
+        # Enhanced COMMERCIAL INVOICE detection
+        invoice_indicators = [
+            r"\bcommercial\s*invoice\b",  # Exact match
+            r"\binvoice\s*no\b",  # Invoice number
+            r"\binvoice\s*date\b",  # Invoice date
+            r"\btotal\s*invoice\s*value\b",  # Total invoice value
+            r"\btotal\s*value\b",  # Total value
+            r"\binvoice\s*value\b",  # Invoice value
+            r"\bcfr\b",  # Cost and Freight
+            r"\bcif\b",  # Cost, Insurance, and Freight
+            r"\bfob\b",  # Free on Board
+            r"\bex\s*works\b",  # Ex works
+            r"\bcurrency\b",  # Currency mentioned
+            r"\bunit\s*price\b",  # Unit price
+            r"\bprice\s*per\s*unit\b",  # Price per unit
+            r"\brate\b",  # Rate
+            r"\bquantity\b",  # Quantity
+            r"\bqty\b",  # Qty
+            r"\bamount\b",  # Amount
+            r"\bnet\s*weight\b",  # Net weight
+            r"\bgross\s*weight\b",  # Gross weight
+            r"\bpackaging\b",  # Packaging details
+            r"\bpayment\s*terms\b",  # Payment terms
+            r"\bpayment\s*conditions\b",  # Payment conditions
+            r"\bterms\s*of\s*payment\b",  # Terms of payment
+            r"\bbuyer\b",  # Buyer
+            r"\bseller\b",  # Seller
+            r"\bvendor\b",  # Vendor
+            r"\bsupplier\b",  # Supplier
+            r"\bpurchaser\b",  # Purchaser
+            r"\bcustomer\b",  # Customer
+            r"\bgoods\s*description\b",  # Goods description
+            r"\bdescription\s*of\s*goods\b",  # Description of goods
+            r"\bproduct\s*description\b",  # Product description
+            r"\bincoterms\b",  # Incoterms
+            r"\bexport\s*references\b",  # Export references
+            r"\bjob\s*no\b",  # Job number
+            r"\bcontract\s*no\b",  # Contract number
+            r"\border\s*no\b",  # Order number
+            r"\bpurchase\s*order\b",  # Purchase order
+            r"\bpo\s*no\b",  # PO number
+        ]
+        
+        invoice_score = 0
+        for pattern in invoice_indicators:
+            if re.search(pattern, content_lower):
+                invoice_score += 1
+        
+        # Enhanced BILL OF LADING detection
+        bol_indicators = [
+            r"\bbill\s*of\s*lading\b",  # Exact match
+            r"\bocean\s*freight\b",  # Ocean freight
+            r"\bshipper\s*exporter\b",  # Shipper/exporter
+            r"\bshipper\b",  # Shipper
+            r"\bexporter\b",  # Exporter
+            r"\bconsignee\b",  # Consignee
+            r"\bnotify\s*party\b",  # Notify party
+            r"\bnotify\b",  # Notify
+            r"\bport\s*of\s*loading\b",  # Port of loading
+            r"\bport\s*of\s*discharge\b",  # Port of discharge
+            r"\bport\s*of\s*unloading\b",  # Port of unloading
+            r"\bvessel\b",  # Vessel
+            r"\bship\b",  # Ship
+            r"\bcarrier\b",  # Carrier
+            r"\bcontainer\s*no\b",  # Container number
+            r"\bcontainer\s*number\b",  # Container number
+            r"\bseal\s*no\b",  # Seal number
+            r"\bseal\s*number\b",  # Seal number
+            r"\bshipped\s*on\s*board\b",  # Shipped on board
+            r"\bon\s*board\s*date\b",  # On board date
+            r"\bnon\s*negotiable\b",  # Non-negotiable
+            r"\bocean\s*track\b",  # Ocean track
+            r"\bnvocc\b",  # NVOCC
+            r"\bforwarding\s*agent\b",  # Forwarding agent
+            r"\bfreight\s*forwarder\b",  # Freight forwarder
+            r"\btransport\s*company\b",  # Transport company
+            r"\bshipping\s*line\b",  # Shipping line
+            r"\bocean\s*carrier\b",  # Ocean carrier
+            r"\bvoyage\s*no\b",  # Voyage number
+            r"\bvoyage\s*number\b",  # Voyage number
+            r"\broute\b",  # Route
+            r"\bshipping\s*route\b",  # Shipping route
+            r"\btransit\s*time\b",  # Transit time
+            r"\bdelivery\s*terms\b",  # Delivery terms
+            r"\bshipping\s*terms\b",  # Shipping terms
+            r"\bfreight\s*terms\b",  # Freight terms
+            r"\bfreight\s*prepaid\b",  # Freight prepaid
+            r"\bfreight\s*collect\b",  # Freight collect
+            r"\bcharter\s*party\b",  # Charter party
+            r"\bcharter\s*party\s*bill\b",  # Charter party bill
+            r"\bhouse\s*bill\b",  # House bill
+            r"\bmaster\s*bill\b",  # Master bill
+            r"\bstraight\s*bill\b",  # Straight bill
+            r"\border\s*bill\b",  # Order bill
+            r"\bnegotiable\s*bill\b",  # Negotiable bill
+        ]
+        
+        bol_score = 0
+        for pattern in bol_indicators:
+            if re.search(pattern, content_lower):
+                bol_score += 1
+        
+        # Special case: If BOL is mentioned in a list context (like in covering schedules),
+        # reduce the score to prevent misclassification
+        if "bill of lading" in content_lower or "konnossement" in content_lower:
+            # Check if this looks like a list of documents rather than the main document
+            if any(term in content_lower for term in ["1st mail", "2nd mail", "mail of documents", "please find enclosed", "documents for"]):
+                # This is likely a covering schedule listing BOL as one of the documents
+                bol_score = max(0, bol_score - 3)  # Reduce score
+                print("DEBUG: Reduced BOL score - appears to be listed in covering schedule context")
+        
+        # Enhanced PACKING LIST detection
+        packing_indicators = [
+            r"\bpacking\s*list\b",  # Exact match
+            r"\bpackage\s*list\b",  # Package list
+            r"\bpackages\b",  # Packages
+            r"\bpackage\s*numbers\b",  # Package numbers
+            r"\bpackage\s*nos\b",  # Package nos
+            r"\bpackaging\s*details\b",  # Packaging details
+            r"\bcontents\s*list\b",  # Contents list
+            r"\bitem\s*list\b",  # Item list
+            r"\bgoods\s*list\b",  # Goods list
+            r"\bpacking\s*instructions\b",  # Packing instructions
+            r"\bpacking\s*details\b",  # Packing details
+            r"\bpackage\s*contents\b",  # Package contents
+            r"\bpackage\s*description\b",  # Package description
+        ]
+        
+        packing_score = 0
+        for pattern in packing_indicators:
+            if re.search(pattern, content_lower):
+                packing_score += 1
+        
+        # Enhanced SHIPMENT ADVICE detection
+        shipment_indicators = [
+            r"\bshipment\s*advice\b",  # Exact match
+            r"\bshipping\s*advice\b",  # Shipping advice
+            r"\bshipment\s*notification\b",  # Shipment notification
+            r"\bshipping\s*notification\b",  # Shipping notification
+            r"\badvice\s*of\s*shipment\b",  # Advice of shipment
+            r"\bshipment\s*details\b",  # Shipment details
+            r"\bshipping\s*details\b",  # Shipping details
+            r"\bshipment\s*information\b",  # Shipment information
+            r"\bshipping\s*information\b",  # Shipping information
+            r"\bshipment\s*status\b",  # Shipment status
+            r"\bshipping\s*status\b",  # Shipping status
+        ]
+        
+        shipment_score = 0
+        for pattern in shipment_indicators:
+            if re.search(pattern, content_lower):
+                shipment_score += 1
+        
+        # Enhanced COVERING SCHEDULE detection
+        covering_indicators = [
+            r"\bcovering\s*schedule\b",  # Exact match
+            r"\bschedule\s*of\s*documents\b",  # Schedule of documents
+            r"\bdocument\s*schedule\b",  # Document schedule
+            r"\battachments\s*list\b",  # Attachments list
+            r"\bsupporting\s*documents\b",  # Supporting documents
+            r"\bdocument\s*list\b",  # Document list
+            r"\battachments\b",  # Attachments
+            r"\bsupporting\s*docs\b",  # Supporting docs
+            r"\bdocument\s*attachments\b",  # Document attachments
+            r"\bschedule\s*of\s*attachments\b",  # Schedule of attachments
+        ]
+        
+        covering_score = 0
+        for pattern in covering_indicators:
+            if re.search(pattern, content_lower):
+                covering_score += 1
+        
+        # Document structure analysis to improve accuracy
+        # Look for document headers and titles throughout the document
+        lines = document_content.split('\n')
+        first_lines = [line.strip().lower() for line in lines[:15] if line.strip()]  # First 15 lines
+        
+        # Also search for document type indicators throughout the entire document
+        all_lines = [line.strip().lower() for line in lines if line.strip()]
+        
+        # Check for document type in first few lines (more reliable)
+        header_boost = 0
+        for line in first_lines:
+            if "packing list" in line:
+                packing_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found PACKING LIST in header: '{line}'")
+            elif "shipment advice" in line:
+                shipment_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found SHIPMENT ADVICE in header: '{line}'")
+            elif "covering schedule" in line:
+                covering_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found COVERING SCHEDULE in header: '{line}'")
+            elif "commercial invoice" in line:
+                invoice_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found COMMERCIAL INVOICE in header: '{line}'")
+            elif "bill of lading" in line:
+                bol_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found BILL OF LADING in header: '{line}'")
+            elif "dhl" in line or "waybill" in line:
+                dhl_score += 5  # Strong boost for header match
+                header_boost += 1
+                print(f"DEBUG: Found DHL/WAYBILL in header: '{line}'")
+        
+        # Search for document type indicators throughout the entire document
+        for line in all_lines:
+            if "shipment advice" in line and "shipment advice" not in str(first_lines):
+                shipment_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found SHIPMENT ADVICE in document: '{line}'")
+            elif "covering schedule" in line and "covering schedule" not in str(first_lines):
+                covering_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found COVERING SCHEDULE in document: '{line}'")
+            elif "packing list" in line and "packing list" not in str(first_lines):
+                packing_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found PACKING LIST in document: '{line}'")
+            elif "commercial invoice" in line and "commercial invoice" not in str(first_lines):
+                invoice_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found COMMERCIAL INVOICE in document: '{line}'")
+            elif "bill of lading" in line and "bill of lading" not in str(first_lines):
+                bol_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found BILL OF LADING in document: '{line}'")
+            elif ("dhl" in line or "waybill" in line) and "dhl" not in str(first_lines) and "waybill" not in str(first_lines):
+                dhl_score += 5  # Strong boost for document type found anywhere
+                print(f"DEBUG: Found DHL/WAYBILL in document: '{line}'")
+        
+        # Special handling for COVERING SCHEDULE - it's a meta-document that lists other documents
+        if "covering schedule" in document_content.lower() or "schedule of documents" in document_content.lower():
+            covering_score += 10  # Very strong boost
+            print("DEBUG: Strong boost for COVERING SCHEDULE based on content")
+        
+        # Additional COVERING SCHEDULE detection - look for meta-document patterns
+        # Only apply this boost if we have strong evidence it's a covering schedule
+        covering_indicators_found = 0
+        if any(term in document_content.lower() for term in [
+            "please find enclosed the following documents",
+            "enclosed the following documents",
+            "documents for",
+            "1st mail", "2nd mail",
+            "draft", "konnossement",
+            "mail of documents",
+            "documentary credit",
+            "our reference date",
+            "your reference"
+        ]):
+            covering_indicators_found += 1
+        
+        # Special strong boost for "mail of documents" pattern
+        if "mail of documents" in document_content.lower():
+            covering_score += 8  # Strong boost for this specific pattern
+            covering_indicators_found += 1
+            print("DEBUG: Strong boost for 'mail of documents' pattern")
+        
+        # Additional strong indicators for COVERING SCHEDULE
+        if any(term in document_content.lower() for term in [
+            "covering schedule",
+            "schedule of documents",
+            "document schedule",
+            "attachments list",
+            "supporting documents",
+            "document list",
+            "attachments",
+            "supporting docs",
+            "document attachments",
+            "schedule of attachments"
+        ]):
+            covering_indicators_found += 1
+        
+        # Special case: If document references multiple document types, it's likely a COVERING SCHEDULE
+        # Count how many different document types are referenced
+        document_type_references = 0
+        if "commercial invoice" in document_content.lower():
+            document_type_references += 1
+        if "packing list" in document_content.lower():
+            document_type_references += 1
+        if "shipping advice" in document_content.lower() or "shipment advice" in document_content.lower():
+            document_type_references += 1
+        if "bill of lading" in document_content.lower() or "konnossement" in document_content.lower():
+            document_type_references += 1
+        if "draft" in document_content.lower():
+            document_type_references += 1
+        
+        # If document references multiple document types, it's likely a covering schedule
+        if document_type_references >= 3:
+            covering_indicators_found += 3  # Very strong boost
+            print(f"DEBUG: Very strong boost for COVERING SCHEDULE - references {document_type_references} document types")
+        elif document_type_references >= 2:
+            covering_indicators_found += 2  # Strong boost
+            print(f"DEBUG: Strong boost for COVERING SCHEDULE - references {document_type_references} document types")
+        
+        # Only give the boost if we have multiple strong indicators
+        if covering_indicators_found >= 3:
+            covering_score += 15  # Very strong boost for covering schedule
+            print("DEBUG: Very strong boost for COVERING SCHEDULE based on multiple indicators")
+        elif covering_indicators_found >= 2:
+            covering_score += 10  # Strong boost for covering schedule
+            print("DEBUG: Strong boost for COVERING SCHEDULE based on multiple indicators")
+        elif covering_indicators_found == 1:
+            covering_score += 5  # Moderate boost for single indicator
+            print("DEBUG: Moderate boost for COVERING SCHEDULE based on single indicator")
+        
+        # Special handling for PACKING LIST - look for specific packaging indicators
+        if "packaging:" in document_content.lower() or "package nos" in document_content.lower():
+            packing_score += 3
+            print("DEBUG: Boost for PACKING LIST based on packaging indicators")
+        
+        # Special handling for SHIPMENT ADVICE - look for shipment-specific content
+        if "shipment advice" in document_content.lower() or "shipping advice" in document_content.lower():
+            shipment_score += 3
+            print("DEBUG: Boost for SHIPMENT ADVICE based on content")
+        
+        # Special handling for SHIPMENT ADVICE - look for shipment-specific indicators
+        if any(term in document_content.lower() for term in ["shipment details", "shipping details", "vessel name", "shipped on board date", "expected arrival date"]):
+            shipment_score += 2
+            print("DEBUG: Boost for SHIPMENT ADVICE based on shipment indicators")
+        
+        # Penalize documents that have too many mixed indicators
+        # This helps distinguish between primary and secondary content
+        total_indicators = dhl_score + invoice_score + bol_score + packing_score + shipment_score + covering_score
+        
+        # If a document has too many mixed indicators, reduce scores for less specific types
+        if total_indicators > 20:  # Increased threshold
+            # Reduce scores for types that commonly overlap
+            if invoice_score > 0 and bol_score > 0:
+                # If both invoice and BOL indicators exist, reduce the lower score
+                if invoice_score < bol_score:
+                    invoice_score = max(0, invoice_score - 3)
+                    print(f"DEBUG: Reduced invoice score due to overlap with BOL")
+                else:
+                    bol_score = max(0, bol_score - 3)
+                    print(f"DEBUG: Reduced BOL score due to overlap with invoice")
+            
+            # Reduce invoice score if document is clearly not an invoice
+            if invoice_score > 0 and (packing_score > 0 or shipment_score > 0 or covering_score > 0):
+                if "packing list" in document_content.lower() or "shipment advice" in document_content.lower() or "covering schedule" in document_content.lower():
+                    invoice_score = max(0, invoice_score - 2)
+                    print(f"DEBUG: Reduced invoice score for non-invoice document type")
+        
+        # Special penalty for BOL when we have strong COVERING SCHEDULE evidence
+        # This prevents COVERING SCHEDULE from being misclassified as BOL
+        if covering_indicators_found >= 2 and bol_score > 0:
+            # If we have strong evidence it's a covering schedule, heavily penalize BOL
+            # because covering schedules often list BOL documents but aren't BOLs themselves
+            if "mail of documents" in document_content.lower() or "please find enclosed" in document_content.lower():
+                bol_score = max(0, bol_score - 15)  # Much stronger penalty
+                print("DEBUG: Very strong penalty for BOL due to strong covering schedule evidence")
+            elif covering_indicators_found >= 3:
+                bol_score = max(0, bol_score - 12)  # Stronger penalty
+                print("DEBUG: Strong penalty for BOL due to strong covering schedule evidence")
+            else:
+                bol_score = max(0, bol_score - 8)  # Stronger penalty
+                print("DEBUG: Moderate penalty for BOL due to covering schedule evidence")
+        
+        # Additional penalty: If this is clearly a covering schedule (multiple strong indicators),
+        # heavily penalize BOL to prevent misclassification
+        if covering_indicators_found >= 3 and "mail of documents" in document_content.lower():
+            # This is almost certainly a covering schedule, so heavily penalize BOL
+            bol_score = max(0, bol_score - 20)  # Very heavy penalty
+            print("DEBUG: Very heavy penalty for BOL - document is clearly a covering schedule")
+        
+        # Special case: If document contains multiple document types listed, it's likely a COVERING SCHEDULE
+        # But only if we have strong evidence (multiple covering indicators)
+        if covering_score > 0 and covering_indicators_found >= 2 and (invoice_score > 0 or bol_score > 0 or packing_score > 0 or shipment_score > 0):
+            # Boost covering schedule for documents that list other document types
+            covering_score += 8  # Increased boost
+            print("DEBUG: Strong boost for COVERING SCHEDULE due to multiple document types listed")
+            
+            # Penalize other document types when we have strong covering schedule evidence
+            if covering_indicators_found >= 3:
+                # Reduce scores for other types to prevent misclassification
+                if invoice_score > 0:
+                    invoice_score = max(0, invoice_score - 5)  # Increased penalty
+                    print("DEBUG: Reduced invoice score due to strong covering schedule evidence")
+                if bol_score > 0:
+                    bol_score = max(0, bol_score - 8)  # Much stronger penalty for BOL
+                    print("DEBUG: Reduced BOL score due to strong covering schedule evidence")
+                if packing_score > 0:
+                    packing_score = max(0, packing_score - 5)  # Increased penalty
+                    print("DEBUG: Reduced packing score due to strong covering schedule evidence")
+                if shipment_score > 0:
+                    shipment_score = max(0, shipment_score - 5)  # Increased penalty
+                    print("DEBUG: Reduced shipment score due to strong covering schedule evidence")
+                if dhl_score > 0:
+                    dhl_score = max(0, dhl_score - 5)  # Increased penalty
+                    print("DEBUG: Reduced DHL score due to strong covering schedule evidence")
+            elif covering_indicators_found >= 2:
+                # Moderate penalties for moderate evidence
+                if bol_score > 0:
+                    bol_score = max(0, bol_score - 4)  # Moderate penalty for BOL
+                    print("DEBUG: Reduced BOL score due to moderate covering schedule evidence")
+                if invoice_score > 0:
+                    invoice_score = max(0, invoice_score - 2)
+                    print("DEBUG: Reduced invoice score due to moderate covering schedule evidence")
+        
+        # Score-based classification with confidence thresholds
+        scores = {
+            "DHL RECEIPT": dhl_score,
+            "COMMERCIAL INVOICE": invoice_score,
+            "BILL OF LADING": bol_score,
+            "PACKING LIST": packing_score,
+            "SHIPMENT ADVICE": shipment_score,
+            "COVERING SCHEDULE": covering_score
+        }
+        
+        # Find the document type with the highest score
+        max_score = max(scores.values())
+        max_score_types = [doc_type for doc_type, score in scores.items() if score == max_score]
+        
+        print(f"DEBUG: Final scores: {scores}")
+        print(f"DEBUG: Header boost: {header_boost}")
+        
+        # Only return a result if we have a clear winner with sufficient confidence
+        if max_score >= 5 and len(max_score_types) == 1:
+            detected_type = max_score_types[0]
+            print(f"DEBUG: Heuristic detection successful - {detected_type} (score: {max_score})")
+            return detected_type
+        elif max_score >= 3 and len(max_score_types) == 1:
+            detected_type = max_score_types[0]
+            print(f"DEBUG: Heuristic detection with medium confidence - {detected_type} (score: {max_score})")
+            return detected_type
+        elif max_score >= 2 and len(max_score_types) == 1 and header_boost > 0:
+            detected_type = max_score_types[0]
+            print(f"DEBUG: Heuristic detection with header boost - {detected_type} (score: {max_score}, header_boost: {header_boost})")
+            return detected_type
+        
+        print(f"DEBUG: Heuristic detection failed - scores: {scores}, header_boost: {header_boost}")
         return None
 
     @staticmethod
@@ -536,31 +983,114 @@ class RAGLLMPipeline:
         if cached:
             return cached
 
-        # Fast heuristic detection
+        # Fast heuristic detection with enhanced patterns
         heuristic = self._heuristic_detect_document_type(document_content)
         if heuristic:
             self._doc_type_cache[doc_hash] = heuristic
             return heuristic
 
-        # Truncate document_content for type detection to avoid token limits
-        # Sending only the first 1000 characters as a sample for classification
-        truncated_content = document_content[:1000]
-        print(f"DEBUG: Truncating document content for type detection. Original length: {len(document_content)}, Truncated length: {len(truncated_content)}")
+        # Enhanced LLM-based detection with better sampling
+        # Use multiple samples from different parts of the document for better accuracy
+        doc_length = len(document_content)
+        
+        # Create multiple samples for better detection
+        samples = []
+        
+        # Sample 1: First 1500 characters (header/beginning)
+        if doc_length > 1500:
+            samples.append(f"HEADER SAMPLE:\n{document_content[:1500]}")
+        
+        # Sample 2: Middle section (if document is long enough)
+        if doc_length > 3000:
+            middle_start = doc_length // 2 - 750
+            middle_end = doc_length // 2 + 750
+            samples.append(f"MIDDLE SAMPLE:\n{document_content[middle_start:middle_end]}")
+        
+        # Sample 3: Last 1500 characters (footer/end)
+        if doc_length > 1500:
+            samples.append(f"FOOTER SAMPLE:\n{document_content[-1500:]}")
+        
+        # If document is short, just use the whole thing
+        if not samples:
+            samples.append(f"FULL DOCUMENT:\n{document_content}")
+        
+        # Try each sample until we get a confident result
+        for i, sample in enumerate(samples):
+            print(f"DEBUG: Trying sample {i+1} for document type detection (length: {len(sample)})")
+            
+            messages = [
+                {"role": "system", "content": system_prompt_content},
+                {"role": "user", "content": sample}
+            ]
 
-        messages = [
-            {"role": "system", "content": system_prompt_content},
-            {"role": "user", "content": truncated_content}
-        ]
-
+            try:
+                # Low token, low latency detection with retry
+                llm_response_content = self.get_completion_with_fallback(
+                    messages, 
+                    temperature=0.0, 
+                    max_tokens=32,  # Increased for better responses
+                    glm_timeout_seconds=8  # Increased timeout
+                )
+                
+                if llm_response_content:
+                    doc_type = llm_response_content.strip().upper()
+                    
+                    # Validate the response is one of our expected types
+                    valid_types = {
+                        "BILL OF LADING", "COMMERCIAL INVOICE", "PACKING LIST", 
+                        "DHL RECEIPT", "SHIPMENT ADVICE", "COVERING SCHEDULE"
+                    }
+                    
+                    if doc_type in valid_types:
+                        print(f"DEBUG: LLM detection successful with sample {i+1}: {doc_type}")
+                        self._doc_type_cache[doc_hash] = doc_type
+                        return doc_type
+                    elif doc_type != "UNKNOWN":
+                        print(f"DEBUG: LLM returned unexpected type: {doc_type}, trying next sample")
+                        continue
+                    else:
+                        print(f"DEBUG: LLM returned UNKNOWN for sample {i+1}, trying next sample")
+                        continue
+                else:
+                    print(f"DEBUG: No LLM response for sample {i+1}, trying next sample")
+                    continue
+                    
+            except Exception as e:
+                print(f"DEBUG: Error with sample {i+1}: {e}, trying next sample")
+                continue
+        
+        # If all samples failed, try one more time with the full document (truncated)
+        print("DEBUG: All samples failed, trying with truncated full document")
         try:
-            # Low token, low latency detection
-            llm_response_content = self.get_completion_with_fallback(messages, temperature=0.0, max_tokens=16, glm_timeout_seconds=5)
+            # Use a larger sample but still within reasonable limits
+            truncated_content = document_content[:2000] if doc_length > 2000 else document_content
+            
+            messages = [
+                {"role": "system", "content": system_prompt_content},
+                {"role": "user", "content": f"FULL DOCUMENT SAMPLE:\n{truncated_content}"}
+            ]
+            
+            llm_response_content = self.get_completion_with_fallback(
+                messages, 
+                temperature=0.0, 
+                max_tokens=32,
+                glm_timeout_seconds=10
+            )
+            
             if llm_response_content:
                 doc_type = llm_response_content.strip().upper()
-                self._doc_type_cache[doc_hash] = doc_type
-                return doc_type
-            else:
-                return "UNKNOWN"
+                valid_types = {
+                    "BILL OF LADING", "COMMERCIAL INVOICE", "PACKING LIST", 
+                    "DHL RECEIPT", "SHIPMENT ADVICE", "COVERING SCHEDULE"
+                }
+                
+                if doc_type in valid_types:
+                    print(f"DEBUG: Final LLM detection successful: {doc_type}")
+                    self._doc_type_cache[doc_hash] = doc_type
+                    return doc_type
+        
         except Exception as e:
-            logger.error(f"Error detecting document type: {e}")
-            return "UNKNOWN"
+            print(f"DEBUG: Final detection attempt failed: {e}")
+        
+        print("DEBUG: All detection methods failed, returning UNKNOWN")
+        return "UNKNOWN"
