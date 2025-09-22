@@ -42,11 +42,35 @@ st.set_page_config(
 if 'theme' not in st.session_state:
     st.session_state.theme = "Light Theme"
 
+# --- Start of Debugging Logs ---
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.info("--- Starting App ---")
+
+# Check for API keys
+glm_api_key = os.environ.get("GLM_API_KEY")
+groq_api_key = os.environ.get("GROQ_API_KEY")
+
+if glm_api_key and len(glm_api_key) > 4:
+    logging.info(f"GLM_API_KEY loaded: ...{glm_api_key[-4:]}")
+else:
+    logging.warning("GLM_API_KEY not found or is too short.")
+
+if groq_api_key and len(groq_api_key) > 4:
+    logging.info(f"GROQ_API_KEY loaded: ...{groq_api_key[-4:]}")
+else:
+    logging.warning("GROQ_API_KEY not found or is too short.")
+
 # Get the base directory path
 base_path = os.path.dirname(os.path.abspath(__file__))
+logging.info(f"Base path: {base_path}")
+# --- End of Debugging Logs ---
+
 
 # Load rules configuration
 rules_config_path = os.path.join(base_path, 'rules_config.json')
+logging.info(f"Loading rules config from: {rules_config_path}")
 try:
     with open(rules_config_path, 'r') as f:
         rules_config = json.load(f)
@@ -315,6 +339,7 @@ else:  # Auto theme
 # Load all rule texts
 all_rule_texts = {}
 rules_dir = os.path.join(base_path, 'ISBP rules')
+logging.info(f"Loading rule texts from: {rules_dir}")
 success_container = st.container()
 
 if os.path.isdir(rules_dir):
@@ -327,9 +352,11 @@ if os.path.isdir(rules_dir):
     for rule_file in os.listdir(rules_dir):
         if rule_file.endswith('.pdf') and rule_file in referenced_files:
             rule_path = os.path.join(rules_dir, rule_file)
+            logging.info(f"Reading rule file: {rule_path}")
             rule_text = read_pdf_text(rule_path)
             if rule_text:
                 all_rule_texts[rule_file] = rule_text
+                logging.info(f"Successfully loaded rule: {rule_file}")
                 success_messages.append(f"✅ {rule_file} loaded successfully")
     
     # Display success messages with auto-disappear
@@ -358,6 +385,7 @@ if os.path.isdir(rules_dir):
     
     missing_files = referenced_files - set(all_rule_texts.keys())
     if missing_files:
+        logging.warning(f"Missing rule files: {', '.join(missing_files)}")
         st.error(f"❌ Missing rule files: {', '.join(missing_files)}")
         st.info("Please ensure all files referenced in rules_config.json are present in the ISBP rules folder.")
 else:
@@ -406,6 +434,7 @@ if all_rule_texts:
                     return pipeline.detect_document_type(content)
 
                 doc_type_result = cached_detect_document_type(file_content)
+                logging.info(f"Detected document type: {doc_type_result}")
             
             if doc_type_result and doc_type_result != "UNKNOWN":
                 detected_doc_type = doc_type_result
@@ -436,6 +465,8 @@ if all_rule_texts:
                 specific_rules_available = [rule for rule in specific_rules_filenames if rule in all_rule_texts]
                 for rule_file in specific_rules_available:
                     validation_sets.append((rule_file, all_rule_texts[rule_file]))
+                
+                logging.info(f"Using {len(validation_sets)} validation sets: {[vs[0] for vs in validation_sets]}")
                 
                 if validation_sets:
                     # Analysis Summary
@@ -518,8 +549,10 @@ if all_rule_texts:
                                 idx, rfname = future_to_idx[fut]
                                 try:
                                     result = fut.result()
-                                except Exception:
+                                    logging.info(f"Result for {rfname}: {result}")
+                                except Exception as e:
                                     result = None
+                                    logging.error(f"Error getting result for {rfname}: {e}")
                                 if result:
                                     all_results_map[idx] = (rfname, result)
                                 completed += 1
