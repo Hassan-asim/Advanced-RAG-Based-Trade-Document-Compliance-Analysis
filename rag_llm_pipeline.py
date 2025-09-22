@@ -12,14 +12,13 @@ import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from vectorizer import get_top_k_rules
 
-# Load environment variables from .env file
-load_dotenv()
+
 
 logger = Logger(__name__)
 
 class GLM_LLM_Client:
-    def __init__(self):
-        self.api_key = os.environ.get("GLM_API_KEY")
+    def __init__(self, api_key: str):
+        self.api_key = api_key
         self.base_url = "https://api.z.ai/api/paas/v4/chat/completions"
         self.headers = {
             'Accept-Language': 'en-US,en;q=0.9',
@@ -75,7 +74,7 @@ class GLM_LLM_Client:
             return None
 
 class GROQ_LLM_Client:
-    def __init__(self, model_name: str = 'llama3-70b-8192'):
+    def __init__(self, api_key: str, model_name: str = 'llama-3.1-8b-instant'):
         self.model_name = model_name
         self.temperature = 0.0
         self.max_completion_tokens = 8192
@@ -83,17 +82,15 @@ class GROQ_LLM_Client:
         self.stop = None
         self.stream = False
         # Reuse a single Groq client instance per process for performance
-        groq_api_key = os.environ.get('GROQ_API_KEY')
-        self.client = Groq(api_key=groq_api_key) if groq_api_key else None
+        self.client = Groq(api_key=api_key) if api_key else None
 
     def get_completion(self, messages: List[Dict[str, str]], use_json_format: bool = True, max_tokens_override: int | None = None) -> str | None:
         print("DEBUG: Inside GROQ_LLM_Client.get_completion")
-        groq_api_key = os.environ.get('GROQ_API_KEY')
-        if not groq_api_key or groq_api_key == "your_groq_api_key_here":
+        if not self.client or not self.client.api_key or self.client.api_key == "your_groq_api_key_here":
             print("DEBUG: GROQ_API_KEY not found or not set. Returning None.")
             return None
 
-        client = self.client or Groq(api_key=groq_api_key)
+        client = self.client
 
         try:
             # Only use JSON format if the message contains 'json' or we're doing compliance analysis
@@ -122,9 +119,9 @@ class GROQ_LLM_Client:
             return None
 
 class RAGLLMPipeline:
-    def __init__(self):
-        self.glm_llm = GLM_LLM_Client()
-        self.groq_llm = GROQ_LLM_Client()
+    def __init__(self, glm_api_key: str, groq_api_key: str):
+        self.glm_llm = GLM_LLM_Client(glm_api_key)
+        self.groq_llm = GROQ_LLM_Client(groq_api_key)
         # Simple in-memory cache for RAG retrieval keyed by (doc_hash, rules_hash, k)
         # Use an lru_cache-wrapped helper to avoid recomputation across reruns
         self._doc_type_cache: Dict[str, str] = {}

@@ -49,8 +49,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logging.info("--- Starting App ---")
 
 # Check for API keys
-glm_api_key = os.environ.get("GLM_API_KEY")
-groq_api_key = os.environ.get("GROQ_API_KEY")
+glm_api_key = st.secrets["GLM_API_KEY"]
+groq_api_key = st.secrets["GROQ_API_KEY"]
 
 if glm_api_key and len(glm_api_key) > 4:
     logging.info(f"GLM_API_KEY loaded: ...{glm_api_key[-4:]}")
@@ -424,10 +424,10 @@ if all_rule_texts:
             with st.spinner("🔍 Detecting document type..."):
                 # Cache the pipeline instance across reruns
                 @st.cache_resource(show_spinner=False)
-                def get_pipeline():
-                    return RAGLLMPipeline()
+                def get_pipeline(glm_api_key: str, groq_api_key: str):
+                    return RAGLLMPipeline(glm_api_key, groq_api_key)
 
-                pipeline = get_pipeline()
+                pipeline = get_pipeline(glm_api_key, groq_api_key)
 
                 @st.cache_data(show_spinner=False)
                 def cached_detect_document_type(content: str) -> str:
